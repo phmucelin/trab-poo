@@ -1,7 +1,6 @@
 package view;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 
 import javax.swing.JFrame;
 
@@ -22,7 +21,9 @@ public class JanelaJogo extends JFrame {
 		add(new PainelTurno(), BorderLayout.LINE_END);
 		pack();
 		setSize(Math.min(getWidth(), LARGURA_MAX), Math.min(getHeight(), ALTURA_MAX));
-		setMaximumSize(new Dimension(LARGURA_MAX, ALTURA_MAX));
+		// setMaximumSize não impede o usuário de maximizar um JFrame; sem
+		// redimensionar, a janela nunca passa de 1400 x 1050.
+		setResizable(false);
 		setLocationRelativeTo(null);
 	}
 }
