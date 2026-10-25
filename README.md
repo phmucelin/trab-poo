@@ -1,8 +1,10 @@
 # Herdeiros de Khan: Trabalho de INF1636 (POO)
 
 Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
-Esta é a **1ª iteração** (28/09 → 11/10/2026): só o componente **Model**, sem
-View nem Controller, com testes unitários em JUnit 4.
+Estado atual: **2ª iteração** (11/10 → 25/10/2026), com a tela gráfica em que os
+jogadores ativam colunas da cartela e movem os peões e o Khan pelo mapa. A
+1ª iteração (28/09 → 11/10/2026) entregou o componente **Model** com os testes
+unitários em JUnit 4.
 
 > Importante: o jogo do trabalho é **Herdeiros de Khan** (manual em
 > `Regas.pdf`), não War. O documento da 1ª iteração usa War apenas como
@@ -31,17 +33,21 @@ Arquitetura: View e Controller falam com o Model só pela fachada
 
 ```
 .project / .classpath / .settings   Projeto Eclipse (JavaSE-17, JUnit 4 em lib/)
-src/model/                          Pacote Model (todas as classes são package-private)
+src/model/                          Pacote Model; só a fachada ModelAPI e as interfaces do Observer são públicas
+src/view/                           Janelas e painéis Swing (tabuleiro desenhado com drawImage())
+src/controller/                     Controlador (Singleton) e Main, o ponto de entrada do jogo
 test/model/                         Testes JUnit 4 (mesmo pacote, pasta de fontes separada)
+imagens/                            tabuleiro.jpg, a imagem oficial do tabuleiro publicada no EAD
 lib/                                junit-4.13.2.jar e hamcrest-core-1.3.jar
 scripts/run_tests.sh                Roda os testes pela linha de comando (sem Eclipse)
-docs/                               Resumo das regras usadas pelo Model e imagem do mapa
+docs/                               Regras usadas pelo Model, integração das partes e divisão da 2ª iteração
 ```
 
 Conforme o enunciado, as classes do Model **não são públicas**: só o pacote
-`model` as enxerga. A API pública (Façade + Singleton) será criada na 3ª
-iteração. Todas as coleções usam o framework de coleções (`HashMap`,
-`HashSet`, `ArrayList`).
+`model` as enxerga. As únicas públicas são a fachada `ModelAPI` (Façade +
+Singleton), por onde View e Controller usam o Model, e as interfaces do
+Observer (`ObservadorIF` e `ObservadoIF`). As coleções usam o framework de
+coleções do Java, principalmente `HashMap`, `HashSet` e `ArrayList`.
 
 ## Classes do Model (parte 1: tabuleiro e jogadores)
 
@@ -77,12 +83,12 @@ iteração. Todas as coleções usam o framework de coleções (`HashMap`,
 | `territoriosDe(jogador)` | `paradasComYurtDe(jogador)` | |
 | `dominaContinente(jogador, continente)` | `temMaioriaDeYurts(jogador, regiao)` + `lideresEmYurts` / `segundosEmYurts` | Regra de empate do manual (p. 15). |
 
-O que o Model **não** faz de propósito: decidir *quando* uma ação é permitida
-(sequência do turno, gasto de cavalos, uso do Khan). Isso é do Controller, que
-usa as consultas do `Tabuleiro` (`saoVizinhas`, `podeTerminarMovimentoEm`,
-`cidadesAdjacentes`, `provinciasAdjacentes`...). Cartas, tesouros e melhorias
-são das outras partes do trabalho e se encaixam em `Jogador`/`Cidade` sem
-alterar o que existe.
+O `Tabuleiro` não decide *quando* uma ação é permitida (sequência do turno,
+gasto de cavalos, uso do Khan): ele oferece as consultas (`saoVizinhas`,
+`podeTerminarMovimentoEm`, `cidadesAdjacentes`, `provinciasAdjacentes`...) que a
+`Partida` (parte 3) usa para aplicar as regras do turno. Cartas, tesouros e
+melhorias são da parte 2 e se encaixam em `Jogador`/`Cidade` sem alterar o que
+existe.
 
 ## Mapa
 
@@ -101,7 +107,8 @@ imagem está em `view.CoordenadasMapa`.
 ```
 
 Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
-Resultado atual: **146 testes, todos passando** (29 da parte 1, 46 da parte 2 e 71 da parte 3).
+Resultado atual: **159 testes, todos passando** (29 da parte 1, 46 da parte 2,
+71 da parte 3 e 13 da fachada `ModelAPI`, da 2ª iteração).
 O script respeita `JAVA_HOME`; use um JDK 17 ou superior, como o incluído no Eclipse.
 
 ## Testes (JUnit 4)
@@ -123,10 +130,13 @@ Javadoc. Os principais (os três pedidos na divisão do grupo estão em negrito)
 - `MapaOficialTest`: invariantes do mapa: 9 cidades (3/região), 7
   conselheiros, rotas simétricas, mapa conexo a partir de Karakorum, 4
   províncias do Khan com 2 vizinhas e 1 tributo inicial em cada província.
+- `ModelAPITest` (2ª iteração): fachada Singleton, Observer, nova partida e
+  configurações recusadas, consultas do mapa, colunas, movimento, troca de peão
+  da Altani e movimento do Khan, inclusive para a área de melhorias.
 
 ## Parte 3: partida, turnos e movimento
 
-Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os testes da parte 3, preservando as classes e a documentação original da parte 1 acima. `Partida` decide as regras de preparação, turno, gasto de recursos, ações e encerramento no Model. O futuro Controller poderá consultar a legalidade e solicitar a execução das ações.
+Esta contribuição acrescenta `Partida`, `Turno`, `Fase`, `Movimento` e os testes da parte 3, preservando as classes e a documentação original da parte 1 acima. `Partida` decide as regras de preparação, turno, gasto de recursos, ações e encerramento no Model. O Controller, pela fachada `ModelAPI`, consulta a legalidade e solicita a execução das ações.
 
 - `podeAtacarCidade`, `podePegarTributo` e `podeConstruirYurt` consultam a legalidade sem gastar recursos nem alterar o estado.
 - `moverPara` escolhe um caminho de menor custo e salta automaticamente yurts próprios intermediários. O destino sempre custa um cavalo e conta como visitado.
@@ -148,4 +158,4 @@ Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para os contrato
 
 O catálogo de cores das 44 melhorias não foi inventado a partir do PDF monocromático: a lista de peças e os pedidos/bônus dos conselheiros entram como configuração. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
 
-No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação desta revisão: **146 testes, zero falhas**, compilados com `--release 17` usando o JDK 25 do Eclipse.
+No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação desta revisão: **159 testes, zero falhas**, compilados com `--release 17` com o JDK 17 e com o JDK 25.

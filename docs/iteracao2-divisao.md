@@ -26,17 +26,17 @@ Controller falam com o Model **somente** pela fachada pública `model.ModelAPI`.
 
 Cada parte cria arquivos próprios, então os commits não entram em conflito.
 
-| Parte | Responsável | Arquivos | Depende de |
+| Parte | Responsável | Arquivos | Situação |
 |---|---|---|---|
-| 1. Fachada, Observer e painel do turno | @JogzDev | `model/ModelAPI`, `model/ObservadorIF`, `model/ObservadoIF`, esqueleto de `controller/Controlador`, `view/PainelTurno`, `view/CoresJogador`, `test/model/ModelAPITest` | nada (já entregue) |
-| 2. Tabuleiro gráfico | @phmucelin | `view/PainelTabuleiro`, `view/CoordenadasMapa`, `imagens/tabuleiro.jpg`, correção do `model/MapaOficial` | só do contrato abaixo |
-| 3. Janelas e fluxo do jogo | a definir | `controller/Main`, `view/JanelaInicial`, `view/JanelaJogo`, corpo dos métodos de `Controlador`, README da 2ª iteração | só do contrato abaixo |
+| 1. Fachada, Observer e painel do turno | @JogzDev | `model/ModelAPI`, `model/ObservadorIF`, `model/ObservadoIF`, esqueleto de `controller/Controlador`, `view/PainelTurno`, `view/CoresJogador`, `test/model/ModelAPITest` | entregue (#3) |
+| 2. Tabuleiro gráfico | @phmucelin | `view/PainelTabuleiro`, `view/CoordenadasMapa`, `imagens/tabuleiro.jpg`, correção do `model/MapaOficial` | entregue (#4) |
+| 3. Janelas e fluxo do jogo | @antoniovita | `controller/Main`, `view/JanelaInicial`, `view/JanelaJogo`, corpo dos métodos de `Controlador`, README da 2ª iteração | entregue (#6) |
 
-A Parte 1 já está pronta e testada (159 testes, zero falhas). Depois que ela
-for commitada, a Parte 2 e a Parte 3 podem trabalhar ao mesmo tempo, porque uma
-não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
+As três partes estão na `main`: 159 testes, zero falhas, e o jogo abre pelo
+`controller.Main`. A Parte 2 e a Parte 3 foram feitas ao mesmo tempo, porque
+uma não usa nada da outra além de um construtor (`new PainelTabuleiro()`).
 
-### Parte 1: o que já está pronto
+### Parte 1: fachada, Observer e painel do turno
 
 - `ModelAPI`, `ObservadorIF` e `ObservadoIF`: descritos no contrato abaixo.
 - `Controlador`: Singleton com as assinaturas combinadas, repassando para a fachada.
@@ -103,10 +103,13 @@ f.setVisible(true);
   e herdeiro sem repetição (`ModelAPI.getHerdeiros()`). Ao confirmar, chama
   `Controlador.getInstance().novaPartida(nomes, herdeiros)`. Se devolver `false`,
   mostrar o motivo num `JLabel` da própria janela (sem `JOptionPane`) e não fechar;
-  se devolver `true`, abrir a `JanelaJogo`.
+  se devolver `true`, fechar. Quem abre a `JanelaJogo` é o `Controlador.novaPartida`,
+  quando a partida é criada.
 - `view.JanelaJogo extends JFrame`: `BorderLayout`, com `new PainelTabuleiro()` no
   `CENTER` e `new PainelTurno()` no `LINE_END`, no máximo 1400 x 1050; título com o
-  nome do jogo e encerramento do programa ao fechar.
+  nome do jogo e encerramento do programa ao fechar. As duas janelas não podem ser
+  redimensionadas (`setResizable(false)`): o `setMaximumSize` não impede que um
+  `JFrame` seja maximizado além do limite.
 - `Controlador`: manter as assinaturas e completar o fluxo. Clique recusado é
   ignorado sem mensagem; troca de turno e fim da partida já aparecem no
   `PainelTurno`, então nada de caixas de diálogo.
@@ -175,9 +178,10 @@ Cores: AZUL, VERDE, VERMELHO, AMARELO e PRETO, atribuídas na ordem dos jogadore
 7. `moverPara` escolhe o caminho mais barato até a parada clicada. Por isso a
    View só precisa enviar o destino, não o caminho.
 
-## Ordem de integração
+## Integração e entrega
 
-1. Commit da Parte 1 (este).
-2. Partes 2 e 3 em paralelo, cada uma nos seus arquivos.
-3. Quem terminar por último junta tudo, roda `TodosOsTestes` e abre o jogo pelo `controller.Main`.
-4. Gerar o ZIP da entrega com o README atualizado pela Parte 3.
+1. Parte 1 (#3), Parte 2 (#4) e Parte 3 (#6) estão na `main`.
+2. `TodosOsTestes`: 159 testes, zero falhas no JDK 17 e no 25. O jogo abre pelo
+   `controller.Main`.
+3. Falta gerar o ZIP da entrega: a pasta do projeto inteira, com `imagens/`, `lib/`,
+   `.settings/`, `.project` e `.classpath`.
