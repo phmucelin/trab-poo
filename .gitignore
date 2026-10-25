@@ -9,3 +9,6 @@ build/
 .DS_Store
 .idea/
 *.iml
+
+# Material de referência local (PDFs do enunciado, manual e imagens do EAD)
+.context/
