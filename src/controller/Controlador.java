@@ -2,6 +2,9 @@ package controller;
 
 import java.util.List;
 
+import view.JanelaInicial;
+import view.JanelaJogo;
+
 import model.ModelAPI;
 import model.ObservadorIF;
 
@@ -44,9 +47,22 @@ public final class Controlador {
 		model.remove(o);
 	}
 
-	/** Chamado pela JanelaInicial (Parte 3). */
+	/** Abre a janela de configuração da partida (chamado por Main). */
+	public void abrirJanelaInicial() {
+		new JanelaInicial().setVisible(true);
+	}
+
+	/**
+	 * Chamado pela JanelaInicial. Se a partida for criada, abre a JanelaJogo;
+	 * se for recusada, devolve false e a JanelaInicial mostra o aviso na
+	 * própria janela, sem caixa de diálogo.
+	 */
 	public boolean novaPartida(List<String> nomes, List<String> herdeiros) {
-		return model.novaPartida(nomes, herdeiros);
+		if (!model.novaPartida(nomes, herdeiros)) {
+			return false;
+		}
+		new JanelaJogo().setVisible(true);
+		return true;
 	}
 
 	/**

@@ -10,6 +10,23 @@ View nem Controller, com testes unitários em JUnit 4.
 > do grupo foi escrita com termos de War; a tabela de correspondência está
 > mais abaixo.
 
+## 2ª iteração: tela gráfica
+
+Para jogar, execute `controller.Main` (no Eclipse: *Run As > Java Application*).
+
+1. A `JanelaInicial` pede de 2 a 5 jogadores, o nome de cada um e o herdeiro
+   (sem repetição). Configuração inválida aparece como aviso na própria janela.
+2. A `JanelaJogo` mostra o tabuleiro e, ao lado, o painel do turno.
+3. No painel do turno o jogador ativa uma coluna da cartela e termina o turno.
+   No mapa, clica na parada de destino para mover o peão, no outro peão de
+   Altani para trocá-lo e num local do Khan para movê-lo.
+4. Clique recusado é ignorado, sem mensagem. Troca de turno e fim da partida
+   aparecem no painel do turno; o jogo não usa caixas de diálogo.
+
+Arquitetura: View e Controller falam com o Model só pela fachada
+`model.ModelAPI` (Facade + Singleton); as telas se atualizam pelo Observer
+(`ObservadorIF`/`ObservadoIF`). Detalhes do contrato em `docs/iteracao2-divisao.md`.
+
 ## Estrutura do projeto
 
 ```
