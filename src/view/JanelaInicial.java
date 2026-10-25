@@ -101,6 +101,8 @@ public class JanelaInicial extends JFrame {
 
 		mostrarLinhas();
 		pack();
+		// Sem redimensionar, a janela nunca passa de 1400 x 1050 (enunciado).
+		setResizable(false);
 		setLocationRelativeTo(null);
 	}
 
