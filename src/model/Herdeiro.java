@@ -36,7 +36,7 @@ enum Herdeiro {
 			new AcoesColuna(2, 1, false, false, false)),
 
 	JOCHI("Jochi", 1,
-			"No início do jogo, pegue 2 melhorias ao acaso e coloque uma delas na sua coluna branca.",
+			"No início do jogo, pegue 2 melhorias ao acaso e coloque uma delas na sua coluna branca. Você não precisa seguir a cor das peças de melhoria quando pegá-las.",
 			new AcoesColuna(1, 1, false, true, false),
 			new AcoesColuna(1, 2, true, false, false),
 			new AcoesColuna(2, 1, false, false, false)),

@@ -1,5 +1,12 @@
 # Testes da parte 2
 
+> Atualização da revisão da 3ª iteração: o jogo usa `PecasDoJogo`, com cores
+> e pedidos conferidos nas imagens do EAD e multiplicidades 15/15/14 assumidas.
+> Jochi escolhe uma entre duas melhorias iniciais e pode ignorar a cor nas
+> compras. O restante deste documento registra os contratos e cenários
+> originais; o estado atual está em `docs/iteracao3.md`.
+
+
 JUnit 4, pacote `model`, cenários independentes. Cada teste inclui
 **Objetivo / Entrada / Saída esperada** no Javadoc, seguindo a documentação
 já utilizada pelas outras partes. O documento original do Capítulo 18 não

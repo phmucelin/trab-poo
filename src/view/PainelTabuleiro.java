@@ -77,6 +77,11 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 	private static final int[] RETANGULO_MELHORIAS = { 40, 2700, 1480, 2870 };
 
 	private final BufferedImage tabuleiro;
+	private boolean modoRota;
+	private boolean saltarYurts = true;
+	private final List<String> rotaPlanejada = new ArrayList<>();
+	private final List<Boolean> preferenciasSalto = new ArrayList<>();
+	private Runnable aoAlterarRota;
 	/** Cópia da imagem já na escala da tela, refeita só quando o painel muda de tamanho. */
 	private BufferedImage tabuleiroEscalado;
 
@@ -94,6 +99,7 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 
 	@Override
 	public void notify(ObservadoIF o) {
+		limparRota();
 		repaint();
 	}
 
@@ -114,6 +120,8 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 				desenharDestinos(g2, m);
 				desenharDestinosDoKhan(g2, m);
 			}
+			desenharRota(g2, m);
+			desenharYurts(g2, m);
 			desenharKhan(g2, m);
 			desenharPeoes(g2, m);
 		}
@@ -216,6 +224,42 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 		g2.setFont(getFont().deriveFont(Font.BOLD, Math.max(10f, raio * 1.1f)));
 		FontMetrics fm = g2.getFontMetrics();
 		g2.drawString("K", x - fm.stringWidth("K") / 2, y + fm.getAscent() / 2 - 2);
+	}
+
+	/** Tendas abaixo dos peões, preservando as cores das peças em paradas duplas. */
+	private void desenharYurts(Graphics2D g2, ModelAPI m) {
+		for (String parada : m.getParadas()) {
+			List<String> cores = m.getYurtsParada(parada);
+			Point[] pontos = CoordenadasMapa.circulosDaParada(parada);
+			for (int i = 0; i < cores.size() && pontos.length > 0; i++) {
+				Point ponto = pontos[Math.min(i, pontos.length - 1)];
+				desenharYurt(g2, ponto.x, ponto.y + 55, cores.get(i));
+			}
+		}
+		for (String cidade : m.getCidades()) {
+			String cor = m.getConquistadorCidade(cidade);
+			if (cor == null) continue;
+			int x = 0, y = 0, quantidade = 0;
+			for (String parada : m.getParadasDaCidade(cidade)) {
+				Point ponto = CoordenadasMapa.daParada(parada);
+				if (ponto != null) { x += ponto.x; y += ponto.y; quantidade++; }
+			}
+			if (quantidade > 0) desenharYurt(g2, x / quantidade, y / quantidade, cor);
+		}
+	}
+
+	private void desenharYurt(Graphics2D g2, int px, int py, String cor) {
+		int x = telaX(px), y = telaY(py), raio = Math.max(8, tela(42));
+		int[] xs = { x - raio, x, x + raio, x + raio, x - raio };
+		int[] ys = { y, y - raio, y, y + raio / 2, y + raio / 2 };
+		g2.setColor(CoresJogador.doJogador(cor));
+		g2.fillPolygon(xs, ys, xs.length);
+		g2.setColor(Color.WHITE);
+		g2.setStroke(new BasicStroke(3f));
+		g2.drawPolygon(xs, ys, xs.length);
+		g2.setColor(Color.BLACK);
+		g2.setStroke(new BasicStroke(1f));
+		g2.drawPolygon(xs, ys, xs.length);
 	}
 
 	private void desenharPeoes(Graphics2D g2, ModelAPI m) {
@@ -378,6 +422,47 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 		return noDiretorioDeTrabalho;
 	}
 
+	public void setModoRota(boolean ativo) { modoRota = ativo; limparRota(); }
+	public void setSaltarYurts(boolean saltar) { saltarYurts = saltar; }
+	public void setAoAlterarRota(Runnable atualizacao) { aoAlterarRota = atualizacao; }
+	public List<String> getRotaPlanejada() { return new ArrayList<>(rotaPlanejada); }
+	public void limparRota() {
+		rotaPlanejada.clear(); preferenciasSalto.clear();
+		if (aoAlterarRota != null) aoAlterarRota.run();
+		repaint();
+	}
+	private List<Boolean> saltosPlanejados() {
+		List<Boolean> saltos = new ArrayList<>(preferenciasSalto);
+		if (!saltos.isEmpty()) saltos.set(saltos.size() - 1, false);
+		return saltos;
+	}
+	public boolean isRotaValida() { return ModelAPI.getInstance().podeMoverPor(rotaPlanejada, saltosPlanejados()); }
+	private void planejarParada(String nome) {
+		ModelAPI m = ModelAPI.getInstance();
+		if (m.getCavalosRestantes() <= 0) return;
+		if (!rotaPlanejada.isEmpty() && rotaPlanejada.get(rotaPlanejada.size() - 1).equals(nome)) {
+			Controlador.getInstance().moverPor(new ArrayList<>(rotaPlanejada), saltosPlanejados());
+			return;
+		}
+		String anterior = rotaPlanejada.isEmpty() ? m.getPosicaoPeao(m.getJogadorDaVez(), m.getPeaoAtivo()) : rotaPlanejada.get(rotaPlanejada.size() - 1);
+		if (!m.getVizinhas(anterior).contains(nome)) return;
+		rotaPlanejada.add(nome);
+		preferenciasSalto.add(saltarYurts && m.getYurtsParada(nome).contains(m.getCorJogador(m.getJogadorDaVez())));
+		if (aoAlterarRota != null) aoAlterarRota.run();
+		repaint();
+	}
+	private void desenharRota(Graphics2D g2, ModelAPI m) {
+		if (rotaPlanejada.isEmpty() || m.getPeaoAtivo() < 0) return;
+		Point anterior = CoordenadasMapa.daParada(m.getPosicaoPeao(m.getJogadorDaVez(), m.getPeaoAtivo()));
+		g2.setColor(new Color(0, 100, 255));
+		g2.setStroke(new BasicStroke(4f));
+		for (String nome : rotaPlanejada) {
+			Point proximo = CoordenadasMapa.daParada(nome);
+			if (anterior != null && proximo != null) g2.drawLine(telaX(anterior.x), telaY(anterior.y), telaX(proximo.x), telaY(proximo.y));
+			anterior = proximo;
+		}
+	}
+
 	// ============================================================ clique
 
 	/**
@@ -403,6 +488,10 @@ public class PainelTabuleiro extends JPanel implements ObservadorIF {
 			int y = (int) Math.round((e.getY() - origemY) / escala);
 			Controlador c = Controlador.getInstance();
 			String parada = paradaClicada(x, y);
+			if (modoRota && parada != null) {
+				planejarParada(parada);
+				return;
+			}
 
 			int naCabeca = peaoClicado(m, x, y, ALTURA_CABECA);
 			if (naCabeca >= 0) {

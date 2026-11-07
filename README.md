@@ -1,16 +1,66 @@
 # Herdeiros de Khan: Trabalho de INF1636 (POO)
 
-Projeto Eclipse em Java do jogo **Herdeiros de Khan**, organizado em MVC.
-Estado atual: **2ª iteração** (11/10 → 25/10/2026), com a tela gráfica em que os
-jogadores ativam colunas da cartela e movem os peões e o Khan pelo mapa. A
-1ª iteração (28/09 → 11/10/2026) entregou o componente **Model** com os testes
-unitários em JUnit 4.
+Projeto Eclipse em Java 17, organizado em MVC. A 3ª iteração integra a partida
+completa pela interface e incorpora as correções da revisão do PR #8.
 
-> Importante: o jogo do trabalho é **Herdeiros de Khan** (manual em
-> `Regas.pdf`), não War. O documento da 1ª iteração usa War apenas como
-> exemplo de como o Controller consulta o Model. A divisão de tarefas inicial
-> do grupo foi escrita com termos de War; a tabela de correspondência está
-> mais abaixo.
+## Executar
+
+No Eclipse, importe o projeto existente e execute `controller.Main`.
+Pelo terminal, com JDK 17 ou superior:
+
+```bash
+./scripts/run_game.sh
+./scripts/run_tests.sh
+python3 scripts/package_delivery.py
+```
+
+Os scripts Java respeitam `JAVA_HOME`. A tela inicial pede os jogadores e os
+herdeiros e prepara automaticamente o jogo completo com `model.PecasDoJogo`.
+Cada jogador escolhe sua carta secreta. Jochi também escolhe uma entre duas
+melhorias para a branca antes de iniciar os turnos.
+
+## Interface da 3ª iteração
+
+- **Turno:** ativar colunas, acompanhar Kurultai e terminar o turno. Os botões
+  **Ver cartas** e **Ver cartela** abrem as janelas próprias.
+- **Ações:** coletar tributos, construir yurts, atacar cidades escolhendo
+  tesouros e usar as habilidades de Ogedei e Chagatai.
+- **Melhorias:** comprar no mercado ou às cegas da pilha e resolver recompensas
+  para a branca. Jochi escolhe a coluna da compra, respeitando os quatro espaços.
+- **Entregas:** selecionar tesouros, entregar aos conselheiros e usar os bônus.
+  Escolhas obrigatórias são apresentadas antes de permitir encerrar o turno.
+- **Cartas e Resultado:** consultar objetivos na janela de cartas e apresentar a pontuação final,
+  influência, cartas secretas e critérios de desempate.
+
+As janelas de cartas e cartela desenham as imagens oficiais do EAD com
+`Graphics2D.drawImage()`. A cartela mostra a imagem do herdeiro e as melhorias
+sobre cada coluna. Os identificadores do Model são ligados às fotos por um
+`HashMap` da View. Abertura, fechamento, seleção de cartela, compras e troca de
+turno atualizam as janelas pelo Observer. A carta secreta volta a ficar oculta
+na troca de turno e ao fechar sua janela.
+
+Peões e Khan se movem por clique no mapa. A opção **Traçar rota no mapa**
+permite definir cada parada, escolher saltar ou visitar yurts próprios e
+executar clicando novamente no destino.
+
+## Dados e entrega
+
+Os pedidos dos conselheiros e as combinações de cor e símbolo das melhorias
+foram conferidos na revisão contra as imagens oficiais. As **quantidades por
+cor são uma hipótese documentada**: 15 amarelas, 15 vermelhas e 14 verdes,
+respeitando os 44 componentes e os totais por símbolo. Essa multiplicidade
+não é comprovada pelas fotos dos tipos de peça.
+
+A suíte atual tem **205 testes**, incluindo Jochi, dados, imagens reais,
+Observer, escolhas e uma partida completa pelos controles Swing. O pacote
+fica em `output/entrega/HerdeirosDeKhan-iteracao3.zip`.
+
+Roteiro de conferência: [docs/entrega-iteracao3.md](docs/entrega-iteracao3.md).
+Detalhes da integração: [docs/iteracao3.md](docs/iteracao3.md).
+
+Os PDFs e ZIPs originais do EAD ficam na pasta local `.context/`, ignorada
+pelo Git. As imagens utilizadas pela aplicação estão em `imagens/oficiais/`
+e fazem parte do pacote. Salvamento e recuperação ficam para a última iteração.
 
 ## 2ª iteração: tela gráfica
 
@@ -107,8 +157,10 @@ imagem está em `view.CoordenadasMapa`.
 ```
 
 Compila `src/` e `test/` com `javac` e roda `org.junit.runner.JUnitCore`.
-Resultado atual: **159 testes, todos passando** (29 da parte 1, 46 da parte 2,
-71 da parte 3 e 13 da fachada `ModelAPI`, da 2ª iteração).
+A base da 2ª iteração tem **159 testes** (29 da parte 1, 46 da parte 2,
+71 da parte 3 e 13 da fachada `ModelAPI`). A suíte atual tem **205 testes passando**, incluindo
+preparação completa, ações pela fachada, mercado, recompensas, entregas, bônus
+objetivos, rotas e uma partida completa pelos controles Swing.
 O script respeita `JAVA_HOME`; use um JDK 17 ou superior, como o incluído no Eclipse.
 
 ## Testes (JUnit 4)
@@ -156,6 +208,6 @@ Consulte [docs/parte3-integracao.md](docs/parte3-integracao.md) para os contrato
 - `ComponentesKhan`: integra a preparação, as ações e as escolhas pendentes à `Partida`.
 - `Pontuacao`: influência por maioria regional, cartas secretas e desempates por tesouros não entregues e distância da capital.
 
-O catálogo de cores das 44 melhorias não foi inventado a partir do PDF monocromático: a lista de peças e os pedidos/bônus dos conselheiros entram como configuração. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
+A 3ª iteração usa o cadastro embutido em `PecasDoJogo`, com cores e pedidos conferidos nas imagens e multiplicidades documentadas como hipótese. Veja os dados pendentes, as interpretações de casos ambíguos e exemplos de uso em [docs/parte2-integracao.md](docs/parte2-integracao.md). Os testes novos estão documentados em [docs/testes-parte2.md](docs/testes-parte2.md).
 
-No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação desta revisão: **159 testes, zero falhas**, compilados com `--release 17` com o JDK 17 e com o JDK 25.
+No Eclipse, atualize o projeto com **F5** e execute `test/model/TodosOsTestes.java` em **Run As > JUnit Test**. No terminal, use `JAVA_HOME="/caminho/do/jdk" ./scripts/run_tests.sh`. Validação histórica da 2ª iteração: 159 testes. A suíte revisada da 3ª iteração tem **205 testes**, com compatibilidade Java 17.

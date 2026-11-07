@@ -13,6 +13,23 @@ final class ObjetivoRecursos extends Objetivo {
 		if (criterio == null) throw new IllegalArgumentException("Critério obrigatório");
 		this.criterio = criterio;
 	}
+	@Override String descreverCriterio() {
+		switch (criterio) {
+		case ESPADAS: return "Espadas disponíveis";
+		case TESOUROS: return "Tesouros disponíveis";
+		case TESOUROS_DIFERENTES: return "Tipos de tesouro disponíveis";
+		case BONUS: return "Peças de bônus obtidas";
+		case LINHAS: return "Linhas completas de melhorias nas três cores";
+		case DUAS_MELHORIAS_POR_COLUNA: return "Colunas com pelo menos duas melhorias";
+		case MAIOR_COLUNA: return "Melhorias na maior coluna";
+		case MELHORIAS: return "Total de melhorias";
+		case SIMBOLOS: return "Símbolos diferentes nas melhorias";
+		case PARES: return "Pares de símbolos iguais nas melhorias";
+		case CAVALOS_OU_MAOS: return "Melhorias de cavalos ou mãos";
+		default: throw new IllegalStateException("Critério desconhecido");
+		}
+	}
+
 	@Override int progresso(Jogador jogador, Partida partida, Inventario inventario) {
 		Turno turno = partida.getTurno();
 		boolean ativo = partida.getFase() == Fase.EM_ANDAMENTO && partida.getJogadorDaVez() == jogador;

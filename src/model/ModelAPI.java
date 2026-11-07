@@ -3,6 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.EnumMap;
 import java.util.Random;
 
 /**
@@ -10,7 +13,7 @@ import java.util.Random;
  *
  * É a única classe do pacote model visível para a View e o Controller. Todas
  * as outras continuam com visibilidade de pacote. A fachada só recebe e
- * devolve tipos simples (String, int, boolean e listas de String), para que
+ * devolve tipos simples e coleções de tipos simples, para que
  * nenhuma classe interna do Model vaze para fora do pacote.
  *
  * Convenções do contrato:
@@ -30,23 +33,17 @@ public final class ModelAPI implements ObservadoIF {
 
 	private final List<ObservadorIF> observadores = new ArrayList<>();
 	private Partida partida;
+	private ComponentesKhan componentesKhan;
+	private int jogadorPreparando = -1;
+	private String erroConfiguracao = "";
+	private boolean cartaSecretaVisivel;
+	private int jogadorCartela = -1;
+	private boolean janelaCartasAberta;
+	private boolean janelaCartelaAberta;
 
 	private ModelAPI() {
 	}
 
-	/**
-	 * Componentes usados pela tela da 2ª iteração. As cartas e melhorias ainda
-	 * não aparecem na interface; mover o Khan para a área de melhorias é uma
-	 * jogada válida e, sem peças de melhoria em jogo, não há o que repor.
-	 * Quando a parte das melhorias entrar na tela, a fachada passa a usar
-	 * ComponentesKhan com as peças configuradas.
-	 */
-	private static final class ComponentesDaTela implements ComponentesPartida {
-		@Override
-		public boolean moverKhanParaMelhorias(Partida partida) {
-			return true;
-		}
-	}
 
 	public static ModelAPI getInstance() {
 		if (instancia == null) {
@@ -86,38 +83,116 @@ public final class ModelAPI implements ObservadoIF {
 		return nomes;
 	}
 
-	/**
-	 * Cria e inicia uma partida no mapa oficial. As cores são atribuídas na
-	 * ordem dos jogadores (AZUL, VERDE, VERMELHO, AMARELO, PRETO).
-	 *
-	 * @param nomes     nomes dos jogadores, na ordem de jogo (2 a 5)
-	 * @param herdeiros herdeiro de cada jogador, sem repetição ("ALTANI" ou "Altani")
-	 * @return false se a configuração for inválida; a partida anterior é mantida
-	 */
+	/** Prepara uma partida completa com o cadastro embutido; as escolhas iniciam os turnos. */
 	public boolean novaPartida(List<String> nomes, List<String> herdeiros) {
+		return novaPartidaCompleta(nomes, herdeiros, PecasDoJogo.cadastro(), new Random());
+	}
+
+	/** Cria a preparação completa sem iniciar turnos nem escolher cartas pelo jogador. */
+	boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas) {
+		return novaPartidaCompleta(nomes, herdeiros, pecas, new Random());
+	}
+
+	/** Sorteio injetável para validar a integração com cenários reproduzíveis. */
+	boolean novaPartidaCompleta(List<String> nomes, List<String> herdeiros, List<String> pecas, Random random) {
+		erroConfiguracao = "";
 		if (nomes == null || herdeiros == null || nomes.size() != herdeiros.size()
 				|| nomes.size() < 2 || nomes.size() > Cor.values().length) {
+			erroConfiguracao = "Informe de 2 a 5 jogadores e seus herdeiros.";
 			return false;
 		}
 		try {
 			List<Jogador> jogadores = new ArrayList<>();
 			for (int i = 0; i < nomes.size(); i++) {
-				Herdeiro herdeiro = herdeiro(herdeiros.get(i));
-				if (herdeiro == null) {
-					return false;
-				}
-				jogadores.add(new Jogador(nomes.get(i), Cor.values()[i], herdeiro));
+				Herdeiro h = herdeiro(herdeiros.get(i));
+				if (h == null) throw new IllegalArgumentException("Herdeiro inválido.");
+				jogadores.add(new Jogador(nomes.get(i), Cor.values()[i], h));
 			}
-			Partida nova = new Partida(MapaOficial.criar(), jogadores, new ComponentesDaTela(), new Random());
-			if (!nova.iniciar()) {
-				return false;
-			}
+			Tabuleiro tabuleiro = MapaOficial.criar();
+			if (random == null) throw new IllegalArgumentException("Sorteio obrigatório.");
+			ComponentesKhan componentes = ConfiguracaoPecas.criar(pecas, tabuleiro, random);
+			Partida nova = new Partida(tabuleiro, jogadores, componentes, random);
+			cartaSecretaVisivel = false;
+			janelaCartasAberta = false;
+			janelaCartelaAberta = false;
+			jogadorCartela = 0;
 			partida = nova;
+			componentesKhan = componentes;
+			jogadorPreparando = 0;
 		} catch (IllegalArgumentException e) {
-			return false; // nome vazio ou herdeiro repetido
+			erroConfiguracao = e.getMessage();
+			return false;
 		}
 		notificar();
 		return true;
+	}
+
+	public String getErroConfiguracao() { return erroConfiguracao; }
+
+	public boolean isPreparacao() {
+		return partida != null && partida.getFase() == Fase.PREPARACAO;
+	}
+
+	/** -1 quando não há escolha de carta secreta pendente. */
+	public int getJogadorPreparando() { return jogadorPreparando; }
+
+	/** Somente as opções do jogador que está realizando a preparação. */
+	public List<String> getOpcoesCartaSecreta() {
+		List<String> opcoes = new ArrayList<>();
+		if (isPreparacao() && componentesKhan != null && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando))) {
+			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) {
+				opcoes.add(carta.getNome() + ": " + carta.getObjetivo().getDescricao());
+			}
+		}
+		return opcoes;
+	}
+
+	/** Confirma uma escolha; a última encerra a preparação antes da notificação. */
+	public boolean escolherCartaSecreta(int indice) {
+		if (!isPreparacao() || componentesKhan == null || jogadorPreparando < 0) return false;
+		Jogador jogador = jogador(jogadorPreparando);
+		List<Carta> cartas = componentesKhan.cartasDe(jogador);
+		if (indice < 0 || indice >= cartas.size()
+				|| !componentesKhan.escolherCartaSecreta(jogador, cartas.get(indice))) return false;
+		avancarPreparacao();
+		notificar();
+		return true;
+	}
+
+	private void avancarPreparacao() {
+		while (jogadorPreparando < getNumJogadores() && componentesKhan.cartaEscolhida(jogador(jogadorPreparando))
+				&& componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando)).isEmpty()) jogadorPreparando++;
+		if (jogadorPreparando == getNumJogadores()) {
+			if (!partida.iniciar()) throw new IllegalStateException("Preparação incompleta.");
+			jogadorPreparando = -1;
+		}
+	}
+	public boolean isEscolhaMelhoriaInicialPendente() {
+		return isPreparacao() && jogadorPreparando >= 0 && componentesKhan.cartaEscolhida(jogador(jogadorPreparando))
+				&& !componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando)).isEmpty();
+	}
+	public List<String> getOpcoesMelhoriaInicial() {
+		List<String> opcoes = new ArrayList<>();
+		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) {
+			opcoes.add(melhoria.getCor().name() + ": " + melhoria.getDescricao());
+		}
+		return opcoes;
+	}
+	public boolean escolherMelhoriaInicial(int indice) {
+		if (!isEscolhaMelhoriaInicialPendente() || !componentesKhan.escolherMelhoriaInicial(jogador(jogadorPreparando), indice)) return false;
+		avancarPreparacao();
+		notificar();
+		return true;
+	}
+
+	public List<String> getCartasAbertas() {
+		List<String> cartas = new ArrayList<>();
+		if (componentesKhan != null) {
+			for (Carta carta : componentesKhan.getCartasAbertas()) {
+				cartas.add(carta.getNome() + ": " + carta.getObjetivo().getDescricao());
+			}
+		}
+		return cartas;
 	}
 
 	public boolean temPartida() {
@@ -397,8 +472,405 @@ public final class ModelAPI implements ObservadoIF {
 		if (!emAndamento() || !partida.terminarTurno()) {
 			return false;
 		}
+		cartaSecretaVisivel = false;
+		if (isPartidaEncerrada()) { janelaCartasAberta = false; janelaCartelaAberta = false; }
+		jogadorCartela = getJogadorDaVez();
 		notificar();
 		return true;
+	}
+
+	// ============================================================ ações e recursos
+
+	public boolean isPartidaCompleta() { return componentesKhan != null; }
+
+	public List<String> getProvincias() {
+		List<String> nomes = new ArrayList<>();
+		if (partida != null) for (Provincia provincia : partida.getTabuleiro().getProvincias()) nomes.add(provincia.getNome());
+		Collections.sort(nomes);
+		return nomes;
+	}
+
+	public String getTipoTributoProvincia(String nome) {
+		Provincia provincia = provincia(nome);
+		return provincia == null ? null : provincia.getTributo().name();
+	}
+
+	public int getPecasProvincia(String nome) {
+		Provincia provincia = provincia(nome);
+		return provincia == null ? 0 : provincia.getPecas();
+	}
+
+	public int getMaosRestantes() { return emAndamento() ? partida.getTurno().getMaos() : 0; }
+
+	public int getTributosJogador(int indice, String tipo) {
+		TipoTributo tributo = tributo(tipo);
+		return tributo == null ? 0 : jogador(indice).contarTributo(tributo);
+	}
+
+	public int getTributosVirtuais(String tipo) {
+		TipoTributo tributo = tributo(tipo);
+		return !emAndamento() || tributo == null ? 0 : partida.getTurno().getRecursoVirtual(tributo);
+	}
+
+	public int getYurtsDisponiveis(int indice) { return jogador(indice).getYurtsDisponiveis(); }
+	public int getVotosJogador(int indice) { return jogador(indice).getVotos(); }
+
+	/** Cores das peças construídas, incluindo peças repetidas em paradas duplas. */
+	public List<String> getYurtsParada(String nome) {
+		List<String> cores = new ArrayList<>();
+		Parada parada = parada(nome);
+		if (parada != null) for (Cor cor : parada.getYurts()) cores.add(cor.name());
+		return cores;
+	}
+
+	public int getTesourosRestantesCidade(String nome) {
+		Cidade cidade = cidade(nome);
+		return cidade == null ? 0 : cidade.getTesouros();
+	}
+
+	public String getConquistadorCidade(String nome) {
+		Cidade cidade = cidade(nome);
+		return cidade == null || cidade.getConquistadaPor() == null ? null : cidade.getConquistadaPor().name();
+	}
+
+	/** Peças físicas restantes, com repetições; vazia na demonstração sem tipos. */
+	public List<String> getTesourosCidade(String nome) {
+		List<String> tipos = new ArrayList<>();
+		Cidade cidade = cidade(nome);
+		if (componentesKhan != null && cidade != null) {
+			for (TipoTesouro tipo : componentesKhan.tesourosEm(cidade)) tipos.add(tipo.name());
+		}
+		return tipos;
+	}
+
+	public int getTesourosJogador(int indice, String nome) {
+		TipoTesouro tipo = tesouro(nome);
+		return componentesKhan == null || tipo == null ? 0 : componentesKhan.inventarioDe(jogador(indice)).contarTesouro(tipo);
+	}
+
+	public int getTotalTesourosRecebidos(int indice) { return partida.getTesourosRecebidos(jogador(indice)); }
+
+	public boolean podeConstruirYurt(String nome) { return emAndamento() && partida.podeConstruirYurt(nome); }
+	public boolean construirYurt(String nome) {
+		if (!emAndamento() || !partida.construirYurt(nome)) return false;
+		notificar();
+		return true;
+	}
+
+	public boolean podePegarTributo(String nome) { return emAndamento() && partida.podePegarTributo(nome); }
+	public boolean pegarTributo(String nome) {
+		if (!emAndamento() || !partida.pegarTributo(nome)) return false;
+		notificar();
+		return true;
+	}
+
+	/** null escolhe automaticamente; nome desconhecido é recusado, sem substituição. */
+	public boolean podeAtacarCidade(String nome, String tipo) {
+		return emAndamento() && (tipo == null || tesouro(tipo) != null) && partida.podeAtacarCidade(nome, tesouro(tipo));
+	}
+	public int getCustoAtaqueCidade(String nome) { return emAndamento() ? partida.getCustoAtaqueCidade(nome) : 0; }
+	public boolean atacarCidade(String nome, String tipo) {
+		if (!podeAtacarCidade(nome, tipo) || !partida.atacarCidade(nome, tesouro(tipo))) return false;
+		notificar();
+		return true;
+	}
+
+	public boolean podePegarTesouroComMoeda(String nome, String tipo) {
+		return emAndamento() && (tipo == null || tesouro(tipo) != null) && partida.podePegarTesouroComMoeda(nome, tesouro(tipo));
+	}
+	public boolean pegarTesouroComMoeda(String nome, String tipo) {
+		if (!podePegarTesouroComMoeda(nome, tipo) || !partida.pegarTesouroComMoeda(nome, tesouro(tipo))) return false;
+		notificar();
+		return true;
+	}
+	public boolean podeTrocarCavaloPorEspada() { return emAndamento() && partida.podeTrocarCavaloPorEspada(); }
+	public boolean trocarCavaloPorEspada() {
+		if (!emAndamento() || !partida.trocarCavaloPorEspada()) return false;
+		notificar();
+		return true;
+	}
+
+	// ============================================================ mercado e cartela
+
+	/** Índice 0 é a peça mais à direita; a pilha fechada nunca revela sua peça. */
+	public List<String> getMercadoMelhorias() {
+		List<String> mercado = new ArrayList<>();
+		if (componentesKhan != null) for (Melhoria melhoria : componentesKhan.getMercado()) {
+			mercado.add(melhoria.getCor().name() + ": " + melhoria.getDescricao());
+		}
+		return mercado;
+	}
+	public int getMelhoriasNaReserva() { return componentesKhan == null ? 0 : componentesKhan.melhoriasNaReserva(); }
+
+	/** Peças da cartela do jogador, na ordem de aquisição dentro da coluna. */
+	public List<String> getMelhoriasJogador(int indice, String nomeColuna) {
+		List<String> pecas = new ArrayList<>();
+		Coluna coluna = coluna(nomeColuna);
+		if (componentesKhan == null || coluna == null) return pecas;
+		Inventario inventario = componentesKhan.inventarioDe(jogador(indice));
+		for (Melhoria melhoria : inventario.getMelhorias(coluna)) {
+			pecas.add(melhoria.getDescricao() + (inventario.podeAtivar(melhoria, partida.getTurno().getNumero())
+					? "" : " (a partir do próximo turno)"));
+		}
+		return pecas;
+	}
+	public boolean isMelhoriaGratuitaPendente() {
+		return emAndamento() && componentesKhan != null && componentesKhan.temMelhoriaPendente(partida.getJogadorDaVez());
+	}
+	/** -1 é a compra às cegas do topo da pilha; 0..4 são posições no mercado. */
+	public boolean podeComprarMelhoria(int indice) {
+		return emAndamento() && componentesKhan != null && componentesKhan.podeComprarMelhoria(indice);
+	}
+	public boolean comprarMelhoria(int indice) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.comprarMelhoria(indice)) return false;
+		notificar();
+		return true;
+	}
+	public boolean podeComprarMelhoria(int indice, String destino) {
+		return emAndamento() && componentesKhan != null && componentesKhan.podeComprarMelhoria(indice, coluna(destino));
+	}
+	public boolean comprarMelhoria(int indice, String destino) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.comprarMelhoria(indice, coluna(destino))) return false;
+		notificar();
+		return true;
+	}
+
+	public boolean podeEscolherMelhoriaGratuita(int indice) {
+		return emAndamento() && componentesKhan != null && componentesKhan.podeEscolherMelhoriaGratuita(indice);
+	}
+	public boolean escolherMelhoriaGratuita(int indice) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.escolherMelhoriaGratuita(indice)) return false;
+		notificar();
+		return true;
+	}
+
+	// ============================================================ conselheiros e bônus
+
+	public List<String> getTiposTesouro() {
+		List<String> tipos = new ArrayList<>();
+		for (TipoTesouro tipo : TipoTesouro.values()) tipos.add(tipo.name());
+		return tipos;
+	}
+	public int getTesourosVirtuais(String nome) {
+		TipoTesouro tipo = tesouro(nome);
+		return !emAndamento() || tipo == null ? 0 : partida.getTurno().getTesouroVirtual(tipo);
+	}
+	public List<String> getConselheiros() {
+		List<String> nomes = new ArrayList<>();
+		if (componentesKhan != null) for (Conselheiro conselheiro : componentesKhan.getConselheiros()) nomes.add(conselheiro.getParada().getNome());
+		return nomes;
+	}
+	private Conselheiro conselheiro(String nome) { return componentesKhan == null ? null : componentesKhan.getConselheiro(nome); }
+	/** Pedido vazio significa três tesouros quaisquer; nome inexistente também retorna vazio. */
+	public Map<String, Integer> getPedidoConselheiro(String nome) {
+		Map<String, Integer> pedido = new LinkedHashMap<>();
+		Conselheiro conselheiro = conselheiro(nome);
+		if (conselheiro != null) for (Map.Entry<TipoTesouro, Integer> item : conselheiro.getPedido().entrySet()) pedido.put(item.getKey().name(), item.getValue());
+		return pedido;
+	}
+	public int getVotosEntrega(String nome) { return conselheiro(nome) == null ? 0 : conselheiro(nome).getVotos(); }
+	public String getBonusConselheiro(String nome) {
+		Conselheiro conselheiro = conselheiro(nome);
+		return conselheiro == null || conselheiro.getBonus() == null ? null : conselheiro.getBonus().name();
+	}
+	public boolean isConselheiroVisitado(String nome) {
+		Conselheiro conselheiro = conselheiro(nome);
+		return emAndamento() && conselheiro != null && partida.getTurno().getParadasVisitadas().contains(conselheiro.getParada());
+	}
+	/** Zeros são omitidos; tipos desconhecidos, repetidos ou quantidades inválidas são recusados. */
+	private Map<TipoTesouro, Integer> ofertaTesouros(Map<String, Integer> oferta) {
+		if (oferta == null) return null;
+		Map<TipoTesouro, Integer> convertida = new EnumMap<>(TipoTesouro.class);
+		java.util.Set<TipoTesouro> vistos = new java.util.HashSet<>();
+		for (Map.Entry<String, Integer> item : oferta.entrySet()) {
+			TipoTesouro tipo = tesouro(item.getKey());
+			Integer quantidade = item.getValue();
+			if (tipo == null || !vistos.add(tipo) || quantidade == null || quantidade < 0 || quantidade > 3) return null;
+			if (quantidade > 0) convertida.put(tipo, quantidade);
+		}
+		return convertida;
+	}
+	public boolean podeEntregarTesouros(String nome, Map<String, Integer> oferta) {
+		Map<TipoTesouro, Integer> convertida = ofertaTesouros(oferta);
+		return emAndamento() && componentesKhan != null && convertida != null && componentesKhan.podeEntregarTesouros(nome, convertida);
+	}
+	public boolean entregarTesouros(String nome, Map<String, Integer> oferta) {
+		Map<TipoTesouro, Integer> convertida = ofertaTesouros(oferta);
+		if (!emAndamento() || componentesKhan == null || convertida == null || !componentesKhan.entregarTesouros(nome, convertida)) return false;
+		notificar();
+		return true;
+	}
+	public List<String> getBonusJogador(int indice) {
+		List<String> bonus = new ArrayList<>();
+		if (componentesKhan != null) for (TipoBonus tipo : componentesKhan.inventarioDe(jogador(indice)).getBonus().keySet()) bonus.add(tipo.name());
+		return bonus;
+	}
+	public boolean isBonusUsado(int indice, String nome) {
+		TipoBonus tipo = bonus(nome);
+		return componentesKhan != null && tipo != null && Boolean.TRUE.equals(componentesKhan.inventarioDe(jogador(indice)).getBonus().get(tipo));
+	}
+	public String getDescricaoBonus(String nome) { return bonus(nome) == null ? "" : bonus(nome).getDescricao(); }
+	private static TipoBonus bonus(String nome) {
+		for (TipoBonus tipo : TipoBonus.values()) if (tipo.name().equalsIgnoreCase(nome)) return tipo;
+		return null;
+	}
+	public boolean podeUsarBonus(String nome) { return emAndamento() && componentesKhan != null && componentesKhan.podeUsarBonus(bonus(nome)); }
+	public boolean usarBonus(String nome) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.usarBonus(bonus(nome))) return false;
+		notificar();
+		return true;
+	}
+	public List<String> getOpcoesTesouroDoBonus() {
+		List<String> opcoes = new ArrayList<>();
+		if (emAndamento() && componentesKhan != null) for (TipoTesouro tipo : componentesKhan.escolhasDeTesouro(partida.getJogadorDaVez())) opcoes.add(tipo.name());
+		return opcoes;
+	}
+	public boolean isTesouroDoBonusPendente() { return !getOpcoesTesouroDoBonus().isEmpty(); }
+	public boolean escolherTesouroDoBonus(String nome) {
+		if (!emAndamento() || componentesKhan == null || !componentesKhan.escolherTesouroDoBonus(tesouro(nome))) return false;
+		notificar();
+		return true;
+	}
+
+	public boolean podeMoverPor(List<String> rota, List<Boolean> saltos) {
+		return emAndamento() && partida.podeMoverPor(rota, saltos);
+	}
+	public boolean moverPor(List<String> rota, List<Boolean> saltos) {
+		if (!emAndamento() || !partida.moverPor(rota, saltos)) return false;
+		notificar();
+		return true;
+	}
+
+	// ============================================================ objetivos e encerramento
+
+	public int getPosicaoKurultai() { return partida == null ? 0 : partida.getPosicaoKurultai(); }
+	public int getLimiteKurultai() { return partida == null ? 0 : partida.getLimiteKurultai(); }
+	/** -1 enquanto o fim ainda não foi disparado. */
+	public int getRodadaFinal() { return partida == null ? -1 : partida.getRodadaFinal(); }
+	public List<String> getObjetivosAbertosComProgresso() {
+		List<String> objetivos = new ArrayList<>();
+		if (componentesKhan == null || !emAndamento()) return objetivos;
+		Jogador jogador = partida.getJogadorDaVez();
+		for (Carta carta : componentesKhan.getCartasAbertas()) objetivos.add(carta.getNome() + ": "
+				+ carta.getObjetivo().getDescricao() + " Progresso atual: "
+				+ carta.getObjetivo().progresso(jogador, partida, componentesKhan.inventarioDe(jogador)) + ".");
+		return objetivos;
+	}
+	public boolean isCartaSecretaVisivel() { return emAndamento() && componentesKhan != null && cartaSecretaVisivel; }
+	public boolean mostrarCartaSecreta() {
+		if (!emAndamento() || componentesKhan == null || cartaSecretaVisivel) return false;
+		cartaSecretaVisivel = true;
+		notificar();
+		return true;
+	}
+	public boolean ocultarCartaSecreta() {
+		if (!cartaSecretaVisivel) return false;
+		cartaSecretaVisivel = false;
+		notificar();
+		return true;
+	}
+	public String getCartaSecretaAtual() {
+		if (!isCartaSecretaVisivel()) return "";
+		Jogador jogador = partida.getJogadorDaVez();
+		Carta carta = componentesKhan.cartasDe(jogador).get(0);
+		return carta.getNome() + ": " + carta.getObjetivo().getDescricao() + " Progresso atual: "
+				+ carta.getObjetivo().progresso(jogador, partida, componentesKhan.inventarioDe(jogador)) + ".";
+	}
+	public int getJogadorCartela() { return partida == null ? -1 : jogadorCartela; }
+	public boolean selecionarCartela(int indice) {
+		if (partida == null || indice < 0 || indice >= getNumJogadores() || indice == jogadorCartela) return false;
+		jogadorCartela = indice;
+		notificar();
+		return true;
+	}
+	public int getVotosInfluenciaFinal(int indice) {
+		return !isPartidaEncerrada() || componentesKhan == null ? 0 : componentesKhan.getVotosInfluenciaFinal(jogador(indice));
+	}
+	public int getVotosSecretosFinal(int indice) {
+		return !isPartidaEncerrada() || componentesKhan == null ? 0 : componentesKhan.getVotosSecretosFinal(jogador(indice));
+	}
+	public String getCartaSecretaFinal(int indice) {
+		if (!isPartidaEncerrada() || componentesKhan == null) return "";
+		Carta carta = componentesKhan.cartasDe(jogador(indice)).get(0);
+		return carta.getNome() + ": " + carta.getObjetivo().getDescricao();
+	}
+	public int getTotalTesourosRestantes(int indice) {
+		return componentesKhan == null ? 0 : componentesKhan.inventarioDe(jogador(indice)).totalTesouros();
+	}
+	public int getDistanciaCapital(int indice) { return Pontuacao.distanciaDaCapital(jogador(indice), partida.getTabuleiro()); }
+	public List<Integer> getVencedores() {
+		List<Integer> indices = new ArrayList<>();
+		if (isPartidaEncerrada() && componentesKhan != null) for (Jogador jogador : componentesKhan.getVencedores()) indices.add(partida.getJogadores().indexOf(jogador));
+		return indices;
+	}
+
+	// Identificadores sem caminhos de arquivo: as imagens pertencem exclusivamente à View.
+	public List<String> getIdsCartasAbertas() {
+		List<String> ids = new ArrayList<>();
+		if (componentesKhan != null) for (Carta carta : componentesKhan.getCartasAbertas()) ids.add(carta.getId());
+		return ids;
+	}
+	public List<String> getIdsOpcoesCartaSecreta() {
+		List<String> ids = new ArrayList<>();
+		if (isPreparacao() && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando)))
+			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) ids.add(carta.getId());
+		return ids;
+	}
+	public List<String> getIdsOpcoesMelhoriaInicial() {
+		List<String> ids = new ArrayList<>();
+		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) ids.add(melhoria.getId());
+		return ids;
+	}
+	public String getIdCartaSecretaAtual() {
+		return isCartaSecretaVisivel() ? componentesKhan.cartasDe(partida.getJogadorDaVez()).get(0).getId() : null;
+	}
+	public List<String> getIdsMelhoriasJogador(int indice, String nomeColuna) {
+		List<String> ids = new ArrayList<>();
+		Coluna coluna = coluna(nomeColuna);
+		if (componentesKhan != null && coluna != null) for (Melhoria melhoria : componentesKhan.inventarioDe(jogador(indice)).getMelhorias(coluna)) ids.add(melhoria.getId());
+		return ids;
+	}
+	public List<String> getIdsMercadoMelhorias() {
+		List<String> ids = new ArrayList<>();
+		if (componentesKhan != null) for (Melhoria melhoria : componentesKhan.getMercado()) ids.add(melhoria.getId());
+		return ids;
+	}
+	public boolean isJanelaCartasAberta() { return janelaCartasAberta; }
+	public boolean isJanelaCartelaAberta() { return janelaCartelaAberta; }
+	public boolean abrirJanelaCartas() {
+		if (!emAndamento() || janelaCartasAberta) return false;
+		janelaCartasAberta = true;
+		notificar(); return true;
+	}
+	public boolean fecharJanelaCartas() {
+		if (!janelaCartasAberta) return false;
+		janelaCartasAberta = false; cartaSecretaVisivel = false;
+		notificar(); return true;
+	}
+	public boolean abrirJanelaCartela() {
+		if (!emAndamento() || janelaCartelaAberta) return false;
+		janelaCartelaAberta = true;
+		notificar(); return true;
+	}
+	public boolean fecharJanelaCartela() {
+		if (!janelaCartelaAberta) return false;
+		janelaCartelaAberta = false;
+		notificar(); return true;
+	}
+
+	private Provincia provincia(String nome) {
+		if (partida != null) for (Provincia provincia : partida.getTabuleiro().getProvincias()) {
+			if (provincia.getNome().equals(nome)) return provincia;
+		}
+		return null;
+	}
+	private static TipoTributo tributo(String nome) {
+		for (TipoTributo tipo : TipoTributo.values()) if (tipo.name().equalsIgnoreCase(nome)) return tipo;
+		return null;
+	}
+	private static TipoTesouro tesouro(String nome) {
+		for (TipoTesouro tipo : TipoTesouro.values()) if (tipo.name().equalsIgnoreCase(nome)) return tipo;
+		return null;
 	}
 
 	// ============================================================ auxiliares

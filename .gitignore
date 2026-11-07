@@ -12,3 +12,6 @@ build/
 
 # Material de referência local (PDFs do enunciado, manual e imagens do EAD)
 .context/
+
+# Pacotes gerados para entrega
+output/

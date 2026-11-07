@@ -44,8 +44,12 @@ final class Inventario {
 		return coluna != null && contarMelhorias(coluna) < LIMITE_POR_COLUNA;
 	}
 	boolean adicionarMelhoria(Melhoria melhoria, Coluna coluna, int turno) {
+		return adicionarMelhoria(melhoria, coluna, turno, false);
+	}
+	/** Apenas a ação coordenada de Jochi pode ignorar a cor da peça. */
+	boolean adicionarMelhoria(Melhoria melhoria, Coluna coluna, int turno, boolean ignorarCor) {
 		if (melhoria == null || !cabeMelhoria(coluna) || turno < 0
-				|| (coluna != Coluna.BRANCA && melhoria.getCor() != coluna)
+				|| (!ignorarCor && coluna != Coluna.BRANCA && melhoria.getCor() != coluna)
 				|| adquiridaNoTurno.containsKey(melhoria)) return false;
 		melhorias.get(coluna).add(melhoria);
 		adquiridaNoTurno.put(melhoria, turno);

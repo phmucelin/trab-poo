@@ -37,6 +37,7 @@ public class JanelaInicial extends JFrame {
 	private final JTextField[] tfNomes = new JTextField[MAX_JOGADORES];
 	private final JComboBox<String>[] cbHerdeiros = novosCombos();
 	private final JPanel[] paineisLinha = new JPanel[MAX_JOGADORES];
+
 	private final JLabel lbAviso = new JLabel(" ");
 
 	/** Mostra só as linhas dos jogadores escolhidos. */
@@ -136,10 +137,12 @@ public class JanelaInicial extends JFrame {
 			nomes.add(nome);
 			escolhidos.add(herdeiro);
 		}
-		if (Controlador.getInstance().novaPartida(nomes, escolhidos)) {
+		boolean criada = Controlador.getInstance().novaPartida(nomes, escolhidos);
+		if (criada) {
 			dispose();
 		} else {
-			lbAviso.setText("Não foi possível iniciar a partida com essa configuração.");
+			String erro = ModelAPI.getInstance().getErroConfiguracao();
+			lbAviso.setText("<html><div style='width:360px'>" + PainelPreparacao.escapar(erro) + "</div></html>");
 		}
 	}
 }
