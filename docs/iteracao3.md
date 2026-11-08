@@ -67,7 +67,7 @@ escolhas forem concluídas. A peça não escolhida volta ao fundo da pilha fecha
 preservando a contagem. Esse destino é uma decisão de implementação: o texto
 visível na cartela não especifica como devolver a peça rejeitada.
 
-Nas compras, Jochi escolhe a coluna de destino, inclusive branca, respeitando
+Nas compras, Jochi escolhe a coluna de destino entre as três coloridas, respeitando
 os quatro espaços. Os demais herdeiros continuam obrigados a seguir a cor da
 peça. A validação de destino, capacidade e moedas acontece antes da compra.
 Peças adquiridas no turno atual só produzem efeitos em turnos seguintes.
@@ -76,6 +76,13 @@ O número de linhas já premiadas é registrado separadamente das peças da
 branca. Nenhum herdeiro compra para a branca, nem Jochi: ela só recebe as
 gratuitas das linhas completas. A melhoria inicial de Jochi ocupa o espaço
 da primeira linha, que por isso não premia de novo (manual, p. 20).
+
+### Tolui
+
+O yurt inicial de Tolui em Karakorum ajuda na movimentação e conta nos
+objetivos abertos de 6 e 10 yurts no mapa. Pelo FAQ do manual (p. 20), ele não
+conta em nenhum outro objetivo: não liga redes do Viajante nem vale como yurt
+adjacente a cidades ou províncias do Khan.
 
 ## Demais fluxos integrados
 
@@ -94,6 +101,10 @@ da primeira linha, que por isso não premia de novo (manual, p. 20).
 tesouro, escolha de melhoria e jogo normal. As Views aplicam essa sequência
 em callbacks do Observer. Abrir/fechar cartas ou cartela também altera o estado
 observado. A carta secreta fica oculta na troca de turno e no fechamento da janela.
+
+A janela do jogo nunca passa de 1400 × 1050 nem da área útil da tela (sem a
+barra de menus e o Dock). Em notebooks como 1512 × 982, o tabuleiro é desenhado
+em escala menor, e toda área clicável continua alcançável pelo mouse.
 
 ## Validação e pacote
 
