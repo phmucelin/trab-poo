@@ -44,7 +44,7 @@ public class RegrasEmPartidasAleatoriasTest {
 
 	/**
 	 * Objetivo: regras do manual em qualquer estado de partidas completas.
-	 * Entrada: 60 partidas com 2 a 5 jogadores, herdeiros e jogadas sorteados por semente fixa.
+	 * Entrada: 40 partidas de quatro jogadores (sementes 0 a 39), herdeiros e jogadas sorteados por semente fixa.
 	 * Saída esperada: todas terminam, nenhuma regra é violada e o resultado bate com o recálculo independente.
 	 */
 	@Test public void regrasValemDoInicioAoResultado() {

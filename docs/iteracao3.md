@@ -54,7 +54,7 @@ melhoria. As cartelas e uma das cartas foram reduzidas para 2000 px, porque
 as fotos originais tinham quase 6000 px e deixavam o ZIP com mais de 50 MB.
 
 - `PainelCartas`: carta secreta (escondida até o jogador clicar em Revelar) e
-  as quatro cartas abertas, com o progresso de cada objetivo.
+  até quatro cartas abertas, com o progresso de cada objetivo.
 - `PainelCartela`: a cartela do herdeiro com as melhorias desenhadas por cima
   dos espaços de cada coluna, de baixo para cima.
 - `PainelImagem`: as opções da preparação e o mercado de melhorias.
@@ -118,10 +118,11 @@ rodapé do mapa, continue ao alcance do mouse.
 São 212 testes JUnit 4 (`./scripts/run_tests.sh` ou `TodosOsTestes` no
 Eclipse). Além dos testes de cada regra, há dois testes maiores:
 
-- `PartidaCompletaInterfaceTest` joga uma partida inteira só clicando nos
-  botões e no mapa.
-- `RegrasEmPartidasAleatoriasTest` joga 40 partidas com sorteio fixo, de 2 a
-  5 jogadores, e confere as regras do manual depois de cada jogada.
+- `PartidaCompletaInterfaceTest` parte de uma partida de dois jogadores
+  criada por código e joga a escolha das cartas secretas e os turnos, até o
+  fim, pelos controles Swing (botões e cliques no mapa).
+- `RegrasEmPartidasAleatoriasTest` joga 40 partidas de quatro jogadores com
+  sorteio fixo e confere as regras do manual depois de cada jogada.
 
 ## Roteiro para testar na mão
 

@@ -115,10 +115,11 @@ entrada e a saída esperada. Alguns dos principais:
   maioria por região e as invariantes do mapa oficial.
 - `JochiTest` e `ObjetivosTest`: as regras de herdeiros e objetivos que
   dependem do FAQ do manual.
-- `PartidaCompletaInterfaceTest`: uma partida inteira só clicando nos botões e
-  no mapa.
-- `RegrasEmPartidasAleatoriasTest`: 40 partidas com sorteio fixo, conferindo
-  as regras do manual depois de cada jogada.
+- `PartidaCompletaInterfaceTest`: parte de uma partida de dois jogadores
+  criada por código e joga a escolha das cartas secretas e os turnos, até o
+  fim, pelos controles Swing (botões e cliques no mapa).
+- `RegrasEmPartidasAleatoriasTest`: 40 partidas de quatro jogadores com
+  sorteio fixo, conferindo as regras do manual depois de cada jogada.
 
 ## Documentação
 
