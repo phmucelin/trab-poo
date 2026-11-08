@@ -33,7 +33,7 @@ public class ModelAPITest {
 	@Before
 	public void prepararPartida() {
 		assertTrue("A partida de Ogedei e Chagatai deve ser criada",
-				api.novaPartida(Arrays.asList("Ana", "Bia"), Arrays.asList("OGEDEI", "CHAGATAI")));
+				PreparacaoCompletaTest.iniciarPadrao(Arrays.asList("Ana", "Bia"), Arrays.asList("OGEDEI", "CHAGATAI")));
 		api.add(contador);
 	}
 
@@ -77,10 +77,10 @@ public class ModelAPITest {
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void configuracaoInvalidaEhRecusada() {
-		assertFalse("Herdeiro repetido", api.novaPartida(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "JOCHI")));
-		assertFalse("Herdeiro inexistente", api.novaPartida(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "GENGHIS")));
-		assertFalse("Um único jogador", api.novaPartida(List.of("A"), List.of("JOCHI")));
-		assertFalse("Listas de tamanhos diferentes", api.novaPartida(Arrays.asList("A", "B"), List.of("JOCHI")));
+		assertFalse("Herdeiro repetido", PreparacaoCompletaTest.iniciarPadrao(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "JOCHI")));
+		assertFalse("Herdeiro inexistente", PreparacaoCompletaTest.iniciarPadrao(Arrays.asList("A", "B"), Arrays.asList("JOCHI", "GENGHIS")));
+		assertFalse("Um único jogador", PreparacaoCompletaTest.iniciarPadrao(List.of("A"), List.of("JOCHI")));
+		assertFalse("Listas de tamanhos diferentes", PreparacaoCompletaTest.iniciarPadrao(Arrays.asList("A", "B"), List.of("JOCHI")));
 		assertEquals("A partida anterior deve ser mantida", "Ana", api.getNomeJogador(0));
 		assertEquals("Configurações recusadas não notificam", 0, contador.notificacoes);
 	}
@@ -185,7 +185,7 @@ public class ModelAPITest {
 	 */
 	@Test(timeout = TEMPO_LIMITE)
 	public void altaniEscolhePeaoAntesDeMover() {
-		api.novaPartida(Arrays.asList("Ana", "Bia"), Arrays.asList("Altani", "Tolui"));
+		PreparacaoCompletaTest.iniciarPadrao(Arrays.asList("Ana", "Bia"), Arrays.asList("Altani", "Tolui"));
 		assertEquals("Altani tem dois peões", 2, api.getNumPeoes(0));
 		assertTrue("Altani pode escolher o peão no início", api.podeEscolherPeao());
 		assertTrue("Escolha do segundo peão", api.escolherPeao(1));

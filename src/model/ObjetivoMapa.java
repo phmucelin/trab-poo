@@ -14,6 +14,21 @@ final class ObjetivoMapa extends Objetivo {
 		if (criterio == null) throw new IllegalArgumentException("Critério obrigatório");
 		this.criterio = criterio;
 	}
+	@Override String descreverCriterio() {
+		switch (criterio) {
+		case YURTS: return "Total de yurts, incluindo conquistas";
+		case YURTS_POR_REGIAO: return "Yurts em cada região";
+		case CIDADES: return "Cidades conquistadas";
+		case REDE: return "Yurts na maior rede conectada";
+		case PROVINCIAS_KHAN: return "Províncias do Khan com pelo menos dois yurts adjacentes";
+		case CIDADES_COM_DOIS_YURTS: return "Cidades com pelo menos dois yurts adjacentes";
+		case CIDADES_COM_UM_YURT: return "Cidades com pelo menos um yurt adjacente";
+		case CONSELHEIROS: return "Paradas de conselheiro com yurt próprio, exceto Karakorum";
+		case REGIOES_DESENVOLVIDAS: return "Regiões com pelo menos dois yurts e duas melhorias";
+		default: throw new IllegalStateException("Critério desconhecido");
+		}
+	}
+
 	@Override int progresso(Jogador jogador, Partida partida, Inventario inventario) {
 		Tabuleiro tabuleiro = partida.getTabuleiro();
 		int quantidade = 0;

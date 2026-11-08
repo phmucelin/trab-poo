@@ -169,6 +169,9 @@ class Partida {
 		return executarMovimento(Movimento.validarRota(tabuleiro, turno.getPeaoAtivo(), getJogadorDaVez(), rota, turno.getCavalos()));
 	}
 	/** Cada flag indica se a parada daquele passo deve ser pulada sobre um yurt. */
+	boolean podeMoverPor(List<String> rota, List<Boolean> saltarYurts) {
+		return emAndamento() && Movimento.validarRota(tabuleiro, turno.getPeaoAtivo(), getJogadorDaVez(), rota, saltarYurts, turno.getCavalos()) != null;
+	}
 	boolean moverPor(List<String> rota, List<Boolean> saltarYurts) {
 		if (!emAndamento()) return false;
 		return executarMovimento(Movimento.validarRota(tabuleiro, turno.getPeaoAtivo(), getJogadorDaVez(), rota, saltarYurts, turno.getCavalos()));
@@ -228,16 +231,23 @@ class Partida {
 		Jogador jogador = getJogadorDaVez();
 		if (!emAndamento() || cidade == null || !cidade.podeSerAtacada()
 				|| Collections.disjoint(cidade.getParadasAdjacentes(), turno.getParadasVisitadas())) return false;
-		int custo = turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
+		int custo = getCustoAtaqueCidade(nome);
 		return recursos(TipoTributo.ESPADA) >= custo && (cidade.getTesouros() != 1 || jogador.temYurtDisponivel());
+	}
+	int getCustoAtaqueCidade(String nome) {
+		Cidade cidade = cidade(nome);
+		return cidade == null ? 0 : turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
+	}
+	boolean podeAtacarCidade(String nome, TipoTesouro tipo) {
+		return podeAtacarCidade(nome) && componentes.podeReceberTesouro(cidade(nome), tipo);
 	}
 	boolean atacarCidade(String nome) {
 		return atacarCidade(nome, null);
 	}
 	boolean atacarCidade(String nome, TipoTesouro tipo) {
-		if (!podeAtacarCidade(nome) || !componentes.podeReceberTesouro(cidade(nome), tipo)) return false;
+		if (!podeAtacarCidade(nome, tipo)) return false;
 		Cidade cidade = cidade(nome);
-		int custo = turno.ataquesNaCidade(cidade) == 0 ? 1 : 2;
+		int custo = getCustoAtaqueCidade(nome);
 		gastarTributo(TipoTributo.ESPADA, custo);
 		turno.registrarAtaque(cidade);
 		tomarTesouro(cidade, tipo);
@@ -285,9 +295,12 @@ class Partida {
 		return true;
 	}
 
+	boolean podeTrocarCavaloPorEspada() {
+		return emAndamento() && getJogadorDaVez().getHerdeiro() == Herdeiro.CHAGATAI
+				&& !turno.habilidadeUsada() && turno.getCavalos() > 0 && getEstoque(TipoTributo.ESPADA) > 0;
+	}
 	boolean trocarCavaloPorEspada() {
-		if (!emAndamento() || getJogadorDaVez().getHerdeiro() != Herdeiro.CHAGATAI
-				|| turno.habilidadeUsada() || turno.getCavalos() == 0 || getEstoque(TipoTributo.ESPADA) == 0) return false;
+		if (!podeTrocarCavaloPorEspada()) return false;
 		turno.gastarCavalo();
 		turno.usarHabilidade();
 		receberTributoDoEstoque(TipoTributo.ESPADA, 1);
@@ -298,11 +311,15 @@ class Partida {
 	boolean pegarTesouroComMoeda(String nome) {
 		return pegarTesouroComMoeda(nome, null);
 	}
-	boolean pegarTesouroComMoeda(String nome, TipoTesouro tipo) {
+	boolean podePegarTesouroComMoeda(String nome, TipoTesouro tipo) {
 		Cidade cidade = cidade(nome);
-		if (!emAndamento() || getJogadorDaVez().getHerdeiro() != Herdeiro.OGEDEI || turno.habilidadeUsada()
-				|| cidade == null || !cidade.podeSerAtacada() || cidade.getTesouros() < 2 || recursos(TipoTributo.MOEDA) < 1
-				|| !componentes.podeReceberTesouro(cidade, tipo)) return false;
+		return emAndamento() && getJogadorDaVez().getHerdeiro() == Herdeiro.OGEDEI && !turno.habilidadeUsada()
+				&& cidade != null && cidade.podeSerAtacada() && cidade.getTesouros() >= 2 && recursos(TipoTributo.MOEDA) >= 1
+				&& componentes.podeReceberTesouro(cidade, tipo);
+	}
+	boolean pegarTesouroComMoeda(String nome, TipoTesouro tipo) {
+		if (!podePegarTesouroComMoeda(nome, tipo)) return false;
+		Cidade cidade = cidade(nome);
 		gastarTributo(TipoTributo.MOEDA, 1);
 		turno.usarHabilidade();
 		tomarTesouro(cidade, tipo);

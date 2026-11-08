@@ -27,5 +27,16 @@ abstract class Objetivo {
 		for (int patamar : patamares) if (quantidade >= patamar) votos++;
 		return votos;
 	}
+	String getDescricao() {
+		StringBuilder texto = new StringBuilder(descreverCriterio()).append(". ");
+		if (isSecreto()) texto.append("1/2/3 votos ao atingir ");
+		else texto.append("1 voto ao atingir ");
+		for (int i = 0; i < patamares.length; i++) {
+			if (i > 0) texto.append("/");
+			texto.append(patamares[i]);
+		}
+		return texto.append(".").toString();
+	}
+	abstract String descreverCriterio();
 	abstract int progresso(Jogador jogador, Partida partida, Inventario inventario);
 }

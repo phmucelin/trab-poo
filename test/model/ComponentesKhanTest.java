@@ -276,6 +276,7 @@ public class ComponentesKhanTest {
 		}
 		Cenario iniciar() {
 			for (Jogador jogador : base.jogadores) assertTrue(componentes.escolherCartaSecreta(jogador, componentes.cartasDe(jogador).get(0)));
+			for (Jogador jogador : base.jogadores) if (!componentes.opcoesMelhoriaInicial(jogador).isEmpty()) assertTrue(componentes.escolherMelhoriaInicial(jogador, 0));
 			assertTrue(partida.iniciar()); return this;
 		}
 		Jogador jogador() { return base.azul(); }

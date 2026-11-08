@@ -1,5 +1,12 @@
 # Parte 2: cartas, peças e pontuação
 
+> Atualização da revisão da 3ª iteração: o jogo usa `PecasDoJogo`, com cores
+> e pedidos conferidos nas imagens do EAD e multiplicidades 15/15/14 assumidas.
+> Jochi escolhe uma entre duas melhorias iniciais e pode ignorar a cor nas
+> compras. O restante deste documento registra os contratos e cenários
+> originais; o estado atual está em `docs/iteracao3.md`.
+
+
 Implementação de Herdeiros de Khan baseada no `Regas.pdf` local, páginas impressas
 2–4 e 11–20 (o arquivo contém duas páginas do manual em cada página do PDF).
 Mantém Java 17, pacote `model`, classes com visibilidade de pacote e JUnit 4.

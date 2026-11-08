@@ -46,11 +46,15 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	private final JLabel lbJogador = new JLabel(" ");
 	private final JLabel lbHerdeiro = new JLabel(" ");
 	private final JLabel lbRodada = new JLabel(" ");
+	private final JLabel lbKurultai = new JLabel(" ");
+	private final JLabel lbPlacar = new JLabel(" ");
 	private final Map<String, JButton> btColunas = new LinkedHashMap<String, JButton>();
 	private final JLabel lbCavalos = new JLabel(" ");
 	private final JLabel lbPeao = new JLabel(" ");
 	private final JLabel lbKhan = new JLabel(" ");
 	private final JButton btTerminar = new JButton("Terminar turno");
+	private final JButton btCartas = new JButton("Ver cartas");
+	private final JButton btCartela = new JButton("Ver cartela");
 	private final JLabel lbDica = new JLabel(" ");
 
 	/** Ativa a coluna informada no construtor (um tratador por botão). */
@@ -75,15 +79,19 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		}
 	}
 
+	private class AbrirCartas implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartas(); } }
+	private class AbrirCartela implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartela(); } }
+
 	public PainelTurno() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-		setPreferredSize(new Dimension(LARGURA, 600));
 
 		lbJogador.setFont(lbJogador.getFont().deriveFont(Font.BOLD, 18f));
 		adicionar(lbJogador);
 		adicionar(lbHerdeiro);
 		adicionar(lbRodada);
+		adicionar(lbKurultai);
+		adicionar(lbPlacar);
 		add(Box.createVerticalStrut(12));
 
 		adicionar(titulo("Ativar coluna"));
@@ -110,11 +118,17 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		adicionar(btTerminar);
 		add(Box.createVerticalStrut(8));
 		adicionar(lbDica);
+		btCartas.addActionListener(new AbrirCartas());
+		btCartela.addActionListener(new AbrirCartela());
+		adicionar(btCartas);
+		adicionar(btCartela);
 		add(Box.createVerticalGlue());
 
 		Controlador.getInstance().registra(this);
 		atualizar(ModelAPI.getInstance());
 	}
+
+	@Override public Dimension getPreferredSize() { return new Dimension(LARGURA, super.getPreferredSize().height); }
 
 	@Override
 	public void notify(ObservadoIF o) {
@@ -132,12 +146,23 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		lbJogador.setText(m.getNomeJogador(vez));
 		lbJogador.setForeground(CoresJogador.doJogador(m.getCorJogador(vez)));
 		lbHerdeiro.setText("Herdeiro: " + nomeLegivel(m.getHerdeiroJogador(vez)));
-		lbRodada.setText("Rodada " + m.getRodada());
+		lbRodada.setText("Rodada " + m.getRodada() + (m.getRodadaFinal() >= 0 ? " — final: " + m.getRodadaFinal() : ""));
+		lbKurultai.setText("Kurultai: " + m.getPosicaoKurultai() + " / " + m.getLimiteKurultai());
+		StringBuilder placar = new StringBuilder();
+		for (int i = 0; i < m.getNumJogadores(); i++) placar.append(PainelPreparacao.escapar(m.getNomeJogador(i))).append(": ").append(m.getVotosJogador(i)).append(" voto(s)<br>");
+		lbPlacar.setText(html(placar.toString(), 150));
+
+		if (m.isPreparacao()) {
+			lbJogador.setText("Preparando partida");
+			habilitarTudo(false);
+			return;
+		}
 
 		if (m.isPartidaEncerrada()) {
 			lbJogador.setText("Partida encerrada");
 			lbJogador.setForeground(Color.DARK_GRAY);
 			habilitarTudo(false);
+			lbDica.setText(html("Consulte o vencedor e a pontuação na aba Resultado.", 150));
 			return;
 		}
 
@@ -150,14 +175,14 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 			bt.setEnabled(ativada == null && livres.contains(nome));
 		}
 		lbCavalos.setText(html(ativada == null ? "Nenhuma coluna ativada"
-				: nomeLegivel(ativada) + ": " + m.getCavalosRestantes() + " cavalo(s) restante(s)", 200));
+				: nomeLegivel(ativada) + ": " + m.getCavalosRestantes() + " cavalo(s) restante(s)", 150));
 
 		if (m.getNumPeoes(vez) > 1) {
 			String texto = "Peão ativo: " + (m.getPeaoAtivo() + 1);
 			if (m.podeEscolherPeao()) {
 				texto += ". Para trocar, clique no outro peão no mapa.";
 			}
-			lbPeao.setText(html(texto, 200));
+			lbPeao.setText(html(texto, 150));
 			lbPeao.setVisible(true);
 		} else {
 			lbPeao.setVisible(false);
@@ -165,26 +190,34 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 
 		boolean khan = m.isKhanPendente();
 		lbKhan.setText(html(khan ? "<b>Khan:</b> clique num local do Khan no mapa."
-				: "Khan: " + localDoKhan(m.getPosicaoKhan()), 200));
+				: "Khan: " + localDoKhan(m.getPosicaoKhan()), 150));
 
 		btTerminar.setEnabled(m.podeTerminarTurno());
 		lbDica.setText(dica(m, ativada, khan));
+		btCartas.setEnabled(true);
+		btCartela.setEnabled(true);
 
 		revalidate();
 		repaint();
 	}
 
 	private static String dica(ModelAPI m, String ativada, boolean khan) {
+		if (m.isTesouroDoBonusPendente()) {
+			return html("Escolha o tesouro do bônus na aba Entregas antes de terminar o turno.", 150);
+		}
+		if (m.isMelhoriaGratuitaPendente()) {
+			return html("Escolha sua melhoria gratuita na aba Melhorias antes de terminar o turno.", 150);
+		}
 		if (ativada == null) {
-			return html("Escolha uma coluna para ativar.", 200);
+			return html("Escolha uma coluna para ativar.", 150);
 		}
 		if (m.getCavalosRestantes() > 0 && !m.getDestinosPossiveis().isEmpty()) {
-			return html("Clique numa parada destacada no mapa para mover o peão.", 200);
+			return html("Clique numa parada destacada no mapa para mover o peão.", 150);
 		}
 		if (khan) {
-			return html("Mova o Khan antes de terminar o turno.", 200);
+			return html("Mova o Khan antes de terminar o turno.", 150);
 		}
-		return html("Termine o turno quando quiser.", 200);
+		return html("Termine o turno quando quiser.", 150);
 	}
 
 	private static String localDoKhan(String posicao) {
@@ -199,6 +232,8 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 			bt.setEnabled(valor);
 		}
 		btTerminar.setEnabled(valor);
+		btCartas.setEnabled(valor);
+		btCartela.setEnabled(valor);
 		lbPeao.setVisible(valor);
 		lbDica.setText(" ");
 	}
