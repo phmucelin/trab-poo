@@ -173,8 +173,10 @@ public final class ModelAPI implements ObservadoIF {
 	}
 	public List<String> getOpcoesMelhoriaInicial() {
 		List<String> opcoes = new ArrayList<>();
-		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) {
-			opcoes.add(melhoria.getCor().name() + ": " + melhoria.getDescricao());
+		if (isEscolhaMelhoriaInicialPendente()) {
+			for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) {
+				opcoes.add(melhoria.getCor().name() + ": " + melhoria.getDescricao());
+			}
 		}
 		return opcoes;
 	}
@@ -473,7 +475,10 @@ public final class ModelAPI implements ObservadoIF {
 			return false;
 		}
 		cartaSecretaVisivel = false;
-		if (isPartidaEncerrada()) { janelaCartasAberta = false; janelaCartelaAberta = false; }
+		if (isPartidaEncerrada()) {
+			janelaCartasAberta = false;
+			janelaCartelaAberta = false;
+		}
 		jogadorCartela = getJogadorDaVez();
 		notificar();
 		return true;
@@ -657,7 +662,11 @@ public final class ModelAPI implements ObservadoIF {
 	}
 	public List<String> getConselheiros() {
 		List<String> nomes = new ArrayList<>();
-		if (componentesKhan != null) for (Conselheiro conselheiro : componentesKhan.getConselheiros()) nomes.add(conselheiro.getParada().getNome());
+		if (componentesKhan != null) {
+			for (Conselheiro conselheiro : componentesKhan.getConselheiros()) {
+				nomes.add(conselheiro.getParada().getNome());
+			}
+		}
 		return nomes;
 	}
 	private Conselheiro conselheiro(String nome) { return componentesKhan == null ? null : componentesKhan.getConselheiro(nome); }
@@ -665,7 +674,11 @@ public final class ModelAPI implements ObservadoIF {
 	public Map<String, Integer> getPedidoConselheiro(String nome) {
 		Map<String, Integer> pedido = new LinkedHashMap<>();
 		Conselheiro conselheiro = conselheiro(nome);
-		if (conselheiro != null) for (Map.Entry<TipoTesouro, Integer> item : conselheiro.getPedido().entrySet()) pedido.put(item.getKey().name(), item.getValue());
+		if (conselheiro != null) {
+			for (Map.Entry<TipoTesouro, Integer> item : conselheiro.getPedido().entrySet()) {
+				pedido.put(item.getKey().name(), item.getValue());
+			}
+		}
 		return pedido;
 	}
 	public int getVotosEntrega(String nome) { return conselheiro(nome) == null ? 0 : conselheiro(nome).getVotos(); }
@@ -702,7 +715,11 @@ public final class ModelAPI implements ObservadoIF {
 	}
 	public List<String> getBonusJogador(int indice) {
 		List<String> bonus = new ArrayList<>();
-		if (componentesKhan != null) for (TipoBonus tipo : componentesKhan.inventarioDe(jogador(indice)).getBonus().keySet()) bonus.add(tipo.name());
+		if (componentesKhan != null) {
+			for (TipoBonus tipo : componentesKhan.inventarioDe(jogador(indice)).getBonus().keySet()) {
+				bonus.add(tipo.name());
+			}
+		}
 		return bonus;
 	}
 	public boolean isBonusUsado(int indice, String nome) {
@@ -722,7 +739,11 @@ public final class ModelAPI implements ObservadoIF {
 	}
 	public List<String> getOpcoesTesouroDoBonus() {
 		List<String> opcoes = new ArrayList<>();
-		if (emAndamento() && componentesKhan != null) for (TipoTesouro tipo : componentesKhan.escolhasDeTesouro(partida.getJogadorDaVez())) opcoes.add(tipo.name());
+		if (emAndamento() && componentesKhan != null) {
+			for (TipoTesouro tipo : componentesKhan.escolhasDeTesouro(partida.getJogadorDaVez())) {
+				opcoes.add(tipo.name());
+			}
+		}
 		return opcoes;
 	}
 	public boolean isTesouroDoBonusPendente() { return !getOpcoesTesouroDoBonus().isEmpty(); }
@@ -800,25 +821,40 @@ public final class ModelAPI implements ObservadoIF {
 	public int getDistanciaCapital(int indice) { return Pontuacao.distanciaDaCapital(jogador(indice), partida.getTabuleiro()); }
 	public List<Integer> getVencedores() {
 		List<Integer> indices = new ArrayList<>();
-		if (isPartidaEncerrada() && componentesKhan != null) for (Jogador jogador : componentesKhan.getVencedores()) indices.add(partida.getJogadores().indexOf(jogador));
+		if (isPartidaEncerrada() && componentesKhan != null) {
+			for (Jogador jogador : componentesKhan.getVencedores()) {
+				indices.add(partida.getJogadores().indexOf(jogador));
+			}
+		}
 		return indices;
 	}
 
-	// Identificadores sem caminhos de arquivo: as imagens pertencem exclusivamente à View.
+	// Ids das imagens. O Model não conhece arquivos: quem liga id a arquivo é a View.
 	public List<String> getIdsCartasAbertas() {
 		List<String> ids = new ArrayList<>();
-		if (componentesKhan != null) for (Carta carta : componentesKhan.getCartasAbertas()) ids.add(carta.getId());
+		if (componentesKhan != null) {
+			for (Carta carta : componentesKhan.getCartasAbertas()) {
+				ids.add(carta.getId());
+			}
+		}
 		return ids;
 	}
 	public List<String> getIdsOpcoesCartaSecreta() {
 		List<String> ids = new ArrayList<>();
-		if (isPreparacao() && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando)))
-			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) ids.add(carta.getId());
+		if (isPreparacao() && jogadorPreparando >= 0 && !componentesKhan.cartaEscolhida(jogador(jogadorPreparando))) {
+			for (Carta carta : componentesKhan.cartasDe(jogador(jogadorPreparando))) {
+				ids.add(carta.getId());
+			}
+		}
 		return ids;
 	}
 	public List<String> getIdsOpcoesMelhoriaInicial() {
 		List<String> ids = new ArrayList<>();
-		if (isEscolhaMelhoriaInicialPendente()) for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) ids.add(melhoria.getId());
+		if (isEscolhaMelhoriaInicialPendente()) {
+			for (Melhoria melhoria : componentesKhan.opcoesMelhoriaInicial(jogador(jogadorPreparando))) {
+				ids.add(melhoria.getId());
+			}
+		}
 		return ids;
 	}
 	public String getIdCartaSecretaAtual() {
@@ -827,35 +863,66 @@ public final class ModelAPI implements ObservadoIF {
 	public List<String> getIdsMelhoriasJogador(int indice, String nomeColuna) {
 		List<String> ids = new ArrayList<>();
 		Coluna coluna = coluna(nomeColuna);
-		if (componentesKhan != null && coluna != null) for (Melhoria melhoria : componentesKhan.inventarioDe(jogador(indice)).getMelhorias(coluna)) ids.add(melhoria.getId());
+		if (componentesKhan != null && coluna != null) {
+			for (Melhoria melhoria : componentesKhan.inventarioDe(jogador(indice)).getMelhorias(coluna)) {
+				ids.add(melhoria.getId());
+			}
+		}
 		return ids;
 	}
 	public List<String> getIdsMercadoMelhorias() {
 		List<String> ids = new ArrayList<>();
-		if (componentesKhan != null) for (Melhoria melhoria : componentesKhan.getMercado()) ids.add(melhoria.getId());
+		if (componentesKhan != null) {
+			for (Melhoria melhoria : componentesKhan.getMercado()) {
+				ids.add(melhoria.getId());
+			}
+		}
 		return ids;
 	}
+
+	// ============================================================ janelas de cartas e cartela
+	// O enunciado trata abrir essas janelas como mudança de estado da partida, então
+	// o estado fica aqui e as janelas só refletem o que o Observer avisar.
+
 	public boolean isJanelaCartasAberta() { return janelaCartasAberta; }
 	public boolean isJanelaCartelaAberta() { return janelaCartelaAberta; }
+
 	public boolean abrirJanelaCartas() {
-		if (!emAndamento() || janelaCartasAberta) return false;
+		if (!emAndamento() || janelaCartasAberta) {
+			return false;
+		}
 		janelaCartasAberta = true;
-		notificar(); return true;
+		notificar();
+		return true;
 	}
+
+	/** Fechar a janela também esconde a carta secreta. */
 	public boolean fecharJanelaCartas() {
-		if (!janelaCartasAberta) return false;
-		janelaCartasAberta = false; cartaSecretaVisivel = false;
-		notificar(); return true;
+		if (!janelaCartasAberta) {
+			return false;
+		}
+		janelaCartasAberta = false;
+		cartaSecretaVisivel = false;
+		notificar();
+		return true;
 	}
+
 	public boolean abrirJanelaCartela() {
-		if (!emAndamento() || janelaCartelaAberta) return false;
+		if (!emAndamento() || janelaCartelaAberta) {
+			return false;
+		}
 		janelaCartelaAberta = true;
-		notificar(); return true;
+		notificar();
+		return true;
 	}
+
 	public boolean fecharJanelaCartela() {
-		if (!janelaCartelaAberta) return false;
+		if (!janelaCartelaAberta) {
+			return false;
+		}
 		janelaCartelaAberta = false;
-		notificar(); return true;
+		notificar();
+		return true;
 	}
 
 	private Provincia provincia(String nome) {

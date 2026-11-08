@@ -145,8 +145,13 @@ public class PainelEntregas extends JPanel implements ObservadorIF {
 		if (local != null) {
 			Map<String, Integer> solicitado = m.getPedidoConselheiro(local);
 			texto.append("<b>Pedido:</b> ");
-			if (solicitado.isEmpty()) texto.append("3 tesouros quaisquer");
-			else for (Map.Entry<String, Integer> item : solicitado.entrySet()) texto.append(item.getValue()).append(" ").append(item.getKey()).append("; ");
+			if (solicitado.isEmpty()) {
+				texto.append("3 tesouros quaisquer");
+			} else {
+				for (Map.Entry<String, Integer> item : solicitado.entrySet()) {
+					texto.append(item.getValue()).append(" ").append(item.getKey()).append("; ");
+				}
+			}
 			texto.append("<br>Entrega: ").append(m.getVotosEntrega(local)).append(" voto(s).");
 			String premio = m.getBonusConselheiro(local);
 			texto.append("<br>").append(premio == null ? "Bônus já retirado." : "Primeira entrega: " + m.getDescricaoBonus(premio) + ".");
@@ -157,7 +162,7 @@ public class PainelEntregas extends JPanel implements ObservadorIF {
 		String tipoBonus = selecionado(bonus);
 		boolean usado = m.temPartida() && m.isBonusUsado(m.getJogadorDaVez(), tipoBonus);
 		descricaoBonus.setText(html(tipoBonus == null ? "Nenhum bônus obtido." : m.getDescricaoBonus(tipoBonus)
-				+ (usado ? " — já utilizado." : " — ainda não utilizado.")));
+				+ (usado ? " (já utilizado)" : " (ainda não utilizado)")));
 		usar.setEnabled(m.podeUsarBonus(tipoBonus));
 		escolher.setEnabled(m.getOpcoesTesouroDoBonus().contains(selecionado(opcoes)));
 		boolean ativa = m.isPartidaCompleta() && !m.isPreparacao() && !m.isPartidaEncerrada();

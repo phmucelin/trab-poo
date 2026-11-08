@@ -146,7 +146,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		lbJogador.setText(m.getNomeJogador(vez));
 		lbJogador.setForeground(CoresJogador.doJogador(m.getCorJogador(vez)));
 		lbHerdeiro.setText("Herdeiro: " + nomeLegivel(m.getHerdeiroJogador(vez)));
-		lbRodada.setText("Rodada " + m.getRodada() + (m.getRodadaFinal() >= 0 ? " — final: " + m.getRodadaFinal() : ""));
+		lbRodada.setText("Rodada " + m.getRodada() + (m.getRodadaFinal() >= 0 ? " (última: " + m.getRodadaFinal() + ")" : ""));
 		lbKurultai.setText("Kurultai: " + m.getPosicaoKurultai() + " / " + m.getLimiteKurultai());
 		StringBuilder placar = new StringBuilder();
 		for (int i = 0; i < m.getNumJogadores(); i++) placar.append(PainelPreparacao.escapar(m.getNomeJogador(i))).append(": ").append(m.getVotosJogador(i)).append(" voto(s)<br>");

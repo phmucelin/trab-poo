@@ -14,7 +14,10 @@ import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-/** Busca O(1) por identificador do Model. Fotos oficiais; nunca usa ImageIcon. */
+/**
+ * Liga os ids que o Model expõe (ex.: SECRETA_VIAJANTE) aos arquivos em
+ * imagens/oficiais. Cada imagem é lida uma vez só e fica guardada no HashMap.
+ */
 public final class CatalogoImagens {
 	private static final CatalogoImagens INSTANCIA = new CatalogoImagens();
 	private final Map<String, String> arquivos = new HashMap<>();
@@ -30,16 +33,37 @@ public final class CatalogoImagens {
 			{"SECRETA_SOLDADO", "5", "2"}, {"SECRETA_CIDADAO", "6", "1"}, {"SECRETA_CAVALEIRO", "6", "2"},
 			{"SECRETA_MENSAGEIRO", "7", "1"}, {"SECRETA_GOVERNADOR", "7", "2"}, {"SECRETA_PREFEITO", "8", "1"}, {"SECRETA_BAJULADOR", "8", "2"}
 		};
-		for (String[] carta : cartas) arquivos.put(carta[0], "cartas/cartas" + carta[1] + "/cartas" + carta[1] + "-" + carta[2] + ".jpg");
+		// Os arquivos do EAD seguem o padrão cartasN/cartasN-M.jpg.
+		for (String[] carta : cartas) {
+			arquivos.put(carta[0], "cartas/cartas" + carta[1] + "/cartas" + carta[1] + "-" + carta[2] + ".jpg");
+		}
+
 		String[] herdeiros = { "ALTANI", "JOCHI", "CHAGATAI", "TOLUI", "OGEDEI" };
-		for (int i = 0; i < herdeiros.length; i++) arquivos.put(herdeiros[i], "cartelas/cartela" + (i + 1) + ".jpg");
-		String[] cores = { "AMARELA", "VERMELHA", "VERDE" }, letras = { "A", "R", "V" };
-		String[] simbolos = { "MOEDA", "ESPADA", "YURT", "MAO", "CAVALOS" }, prefixos = { "MOE", "ESP", "CAS", "MAO", "CAV" };
-		for (int c = 0; c < cores.length; c++) for (int s = 0; s < simbolos.length; s++) melhoria(cores[c], simbolos[s], prefixos[s] + "-" + letras[c]);
-		melhoria("AMARELA", "GADO", "BOI-A"); melhoria("AMARELA", "ESPECIARIAS", "CUI-A");
-		melhoria("VERMELHA", "FERRO", "MOB-R"); melhoria("VERDE", "PELES", "MOP-V"); melhoria("VERDE", "TECIDO", "PER-V");
+		for (int i = 0; i < herdeiros.length; i++) {
+			arquivos.put(herdeiros[i], "cartelas/cartela" + (i + 1) + ".jpg");
+		}
+
+		// Melhorias: prefixo do símbolo + letra da cor (A amarela, R vermelha, V verde).
+		String[] cores = { "AMARELA", "VERMELHA", "VERDE" };
+		String[] letras = { "A", "R", "V" };
+		String[] simbolos = { "MOEDA", "ESPADA", "YURT", "MAO", "CAVALOS" };
+		String[] prefixos = { "MOE", "ESP", "CAS", "MAO", "CAV" };
+		for (int c = 0; c < cores.length; c++) {
+			for (int s = 0; s < simbolos.length; s++) {
+				melhoria(cores[c], simbolos[s], prefixos[s] + "-" + letras[c]);
+			}
+		}
+		// Cada tesouro só existe em uma cor.
+		melhoria("AMARELA", "GADO", "BOI-A");
+		melhoria("AMARELA", "ESPECIARIAS", "CUI-A");
+		melhoria("VERMELHA", "FERRO", "MOB-R");
+		melhoria("VERDE", "PELES", "MOP-V");
+		melhoria("VERDE", "TECIDO", "PER-V");
 	}
-	private void melhoria(String cor, String simbolo, String arquivo) { arquivos.put("MELHORIA_" + cor + "_" + simbolo, "cartoes/cartoes1/" + arquivo + ".jpg"); }
+
+	private void melhoria(String cor, String simbolo, String arquivo) {
+		arquivos.put("MELHORIA_" + cor + "_" + simbolo, "cartoes/cartoes1/" + arquivo + ".jpg");
+	}
 	public static CatalogoImagens getInstance() { return INSTANCIA; }
 	public Set<String> getIdentificadores() { return Set.copyOf(arquivos.keySet()); }
 	public BufferedImage get(String id) {
@@ -53,6 +77,8 @@ public final class CatalogoImagens {
 			try {
 				leitor.setInput(entrada);
 				ImageReadParam parametros = leitor.getDefaultReadParam();
+				// As fotos são grandes; ler com subamostragem economiza memória.
+				// Melhorias aparecem pequenas na tela, então o limite delas é menor.
 				int limite = id.startsWith("MELHORIA_") ? 700 : 1600;
 				int fator = Math.max(1, Math.max(leitor.getWidth(0), leitor.getHeight(0)) / limite);
 				parametros.setSourceSubsampling(fator, fator, 0, 0);
@@ -67,8 +93,16 @@ public final class CatalogoImagens {
 		if (Files.isRegularFile(caminho)) return caminho;
 		try {
 			Path pasta = Path.of(CatalogoImagens.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			for (int i = 0; i < 4 && pasta != null; i++, pasta = pasta.getParent()) if (Files.isRegularFile(pasta.resolve(nome))) return pasta.resolve(nome);
-		} catch (java.net.URISyntaxException e) { throw new IllegalStateException(e); }
+			// Rodando do Eclipse (bin/) ou do script (build/main/), a pasta imagens/
+			// fica alguns níveis acima das classes compiladas.
+			for (int i = 0; i < 4 && pasta != null; i++, pasta = pasta.getParent()) {
+				if (Files.isRegularFile(pasta.resolve(nome))) {
+					return pasta.resolve(nome);
+				}
+			}
+		} catch (java.net.URISyntaxException e) {
+			throw new IllegalStateException(e);
+		}
 		return caminho;
 	}
 	public void desenhar(Graphics2D g, String id, Rectangle area) {

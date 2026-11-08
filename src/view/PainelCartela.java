@@ -9,26 +9,52 @@ import java.util.List;
 import javax.swing.JPanel;
 import model.ModelAPI;
 
-/** Cartela oficial do herdeiro com as peças sobrepostas aos seus quatro espaços. */
+/** Cartela do herdeiro com as melhorias desenhadas por cima de cada espaço. */
 public final class PainelCartela extends JPanel {
-	public PainelCartela() { setPreferredSize(new Dimension(1240, 680)); }
-	@Override protected void paintComponent(Graphics graphics) {
+	private static final String[] COLUNAS = { "VERMELHA", "VERDE", "AMARELA", "BRANCA" };
+
+	// Posição dos espaços medida na foto da cartela, em fração da largura/altura
+	// da imagem. A linha 0 é a de baixo; cada linha sobe 17% da altura.
+	private static final double X_PRIMEIRA_COLUNA = 0.257;
+	private static final double DISTANCIA_COLUNAS = 0.180;
+	private static final double Y_PRIMEIRA_LINHA = 0.595;
+	private static final double DISTANCIA_LINHAS = 0.170;
+	private static final double LARGURA_ESPACO = 0.157;
+	private static final double ALTURA_ESPACO = 0.145;
+
+	public PainelCartela() {
+		setPreferredSize(new Dimension(1240, 680));
+	}
+
+	@Override
+	protected void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);
-		ModelAPI m = ModelAPI.getInstance(); int jogador = m.getJogadorCartela();
-		if (jogador < 0) return;
+		ModelAPI m = ModelAPI.getInstance();
+		int jogador = m.getJogadorCartela();
+		if (jogador < 0) {
+			return;
+		}
 		Graphics2D g = (Graphics2D) graphics.create();
 		CatalogoImagens catalogo = CatalogoImagens.getInstance();
+
 		BufferedImage fundo = catalogo.get(m.getHerdeiroJogador(jogador));
 		double escala = Math.min((getWidth() - 24.0) / fundo.getWidth(), (getHeight() - 24.0) / fundo.getHeight());
-		int w = (int) Math.round(fundo.getWidth() * escala), h = (int) Math.round(fundo.getHeight() * escala);
-		int x = (getWidth() - w) / 2, y = (getHeight() - h) / 2;
+		int w = (int) Math.round(fundo.getWidth() * escala);
+		int h = (int) Math.round(fundo.getHeight() * escala);
+		int x = (getWidth() - w) / 2;
+		int y = (getHeight() - h) / 2;
 		g.drawImage(fundo, x, y, w, h, null);
-		String[] colunas = { "VERMELHA", "VERDE", "AMARELA", "BRANCA" };
-		for (int c = 0; c < colunas.length; c++) {
-			List<String> ids = m.getIdsMelhoriasJogador(jogador, colunas[c]);
-			for (int linha = 0; linha < ids.size(); linha++) catalogo.desenhar(g, ids.get(linha), new Rectangle(
-					x + (int) Math.round(w * (0.257 + c * 0.180)), y + (int) Math.round(h * (0.595 - linha * 0.170)),
-					(int) Math.round(w * 0.157), (int) Math.round(h * 0.145)));
+
+		for (int c = 0; c < COLUNAS.length; c++) {
+			List<String> ids = m.getIdsMelhoriasJogador(jogador, COLUNAS[c]);
+			for (int linha = 0; linha < ids.size(); linha++) {
+				Rectangle espaco = new Rectangle(
+						x + (int) Math.round(w * (X_PRIMEIRA_COLUNA + c * DISTANCIA_COLUNAS)),
+						y + (int) Math.round(h * (Y_PRIMEIRA_LINHA - linha * DISTANCIA_LINHAS)),
+						(int) Math.round(w * LARGURA_ESPACO),
+						(int) Math.round(h * ALTURA_ESPACO));
+				catalogo.desenhar(g, ids.get(linha), espaco);
+			}
 		}
 		g.dispose();
 	}

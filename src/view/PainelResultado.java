@@ -38,7 +38,9 @@ public class PainelResultado extends JPanel implements ObservadorIF {
 			adicionar("<b>" + (vencedores.size() > 1 ? "Vitória compartilhada: " : "Vencedor: ") + nomes + "</b>");
 			adicionar("Partida encerrada na rodada " + m.getRodada() + ".");
 			for (int jogador = 0; jogador < m.getNumJogadores(); jogador++) {
-				int total = m.getVotosJogador(jogador), influencia = m.getVotosInfluenciaFinal(jogador), secretos = m.getVotosSecretosFinal(jogador);
+				int total = m.getVotosJogador(jogador);
+				int influencia = m.getVotosInfluenciaFinal(jogador);
+				int secretos = m.getVotosSecretosFinal(jogador);
 				adicionar("<b>" + PainelPreparacao.escapar(m.getNomeJogador(jogador)) + ": " + total + " votos</b>"
 						+ "<br>Durante o jogo: " + (total - influencia - secretos) + "<br>Influência regional: " + influencia
 						+ "<br>Carta secreta: " + secretos + "<br>Tesouros não entregues: " + m.getTotalTesourosRestantes(jogador)
@@ -47,11 +49,13 @@ public class PainelResultado extends JPanel implements ObservadorIF {
 			}
 			adicionar("Desempates: mais votos, depois mais tesouros físicos não entregues e depois menor distância de Karakorum. Persistindo o empate, a vitória é compartilhada.");
 		}
-		revalidate(); repaint();
+		revalidate();
+		repaint();
 	}
 	private void adicionar(String texto) {
 		JLabel label = new JLabel("<html><div style='width:145px'>" + texto + "</div></html>");
 		label.setAlignmentX(Component.LEFT_ALIGNMENT);
-		add(label); add(Box.createVerticalStrut(12));
+		add(label);
+		add(Box.createVerticalStrut(12));
 	}
 }

@@ -131,17 +131,43 @@ public final class Controlador {
 		return "JOGO";
 	}
 
+	/**
+	 * As janelas de cartas e de cartela são criadas uma vez só e reaproveitadas.
+	 * Quem decide se ficam visíveis é o Model, pelo Observer.
+	 */
 	public boolean abrirJanelaCartas() {
-		if (!model.temPartida() || model.isPreparacao() || model.isPartidaEncerrada()) return false;
-		if (janelaCartas == null || !janelaCartas.isDisplayable()) janelaCartas = new JanelaCartas();
-		boolean abriu = model.abrirJanelaCartas(); janelaCartas.toFront(); return abriu;
+		if (!podeAbrirJanelas()) {
+			return false;
+		}
+		if (janelaCartas == null || !janelaCartas.isDisplayable()) {
+			janelaCartas = new JanelaCartas();
+		}
+		boolean abriu = model.abrirJanelaCartas();
+		janelaCartas.toFront();
+		return abriu;
 	}
-	public boolean fecharJanelaCartas() { return model.fecharJanelaCartas(); }
-	public boolean abrirJanelaCartela() {
-		if (!model.temPartida() || model.isPreparacao() || model.isPartidaEncerrada()) return false;
-		if (janelaCartela == null || !janelaCartela.isDisplayable()) janelaCartela = new JanelaCartela();
-		boolean abriu = model.abrirJanelaCartela(); janelaCartela.toFront(); return abriu;
-	}
-	public boolean fecharJanelaCartela() { return model.fecharJanelaCartela(); }
 
+	public boolean fecharJanelaCartas() {
+		return model.fecharJanelaCartas();
+	}
+
+	public boolean abrirJanelaCartela() {
+		if (!podeAbrirJanelas()) {
+			return false;
+		}
+		if (janelaCartela == null || !janelaCartela.isDisplayable()) {
+			janelaCartela = new JanelaCartela();
+		}
+		boolean abriu = model.abrirJanelaCartela();
+		janelaCartela.toFront();
+		return abriu;
+	}
+
+	public boolean fecharJanelaCartela() {
+		return model.fecharJanelaCartela();
+	}
+
+	private boolean podeAbrirJanelas() {
+		return model.temPartida() && !model.isPreparacao() && !model.isPartidaEncerrada();
+	}
 }

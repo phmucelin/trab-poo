@@ -137,8 +137,11 @@ final class ComponentesKhan implements ComponentesPartida {
 		for (Melhoria melhoria : inventario.getMelhorias(coluna)) {
 			if (!inventario.podeAtivar(melhoria, numeroTurno)) continue;
 			EfeitosColuna efeito = melhoria.getEfeitos();
-			cavalos += efeito.getCavalos(); maos += efeito.getMaos();
-			for (Map.Entry<TipoTributo, Integer> item : efeito.getRecursosVirtuais().entrySet()) tributos.merge(item.getKey(), item.getValue(), Integer::sum);
+			cavalos += efeito.getCavalos();
+			maos += efeito.getMaos();
+			for (Map.Entry<TipoTributo, Integer> item : efeito.getRecursosVirtuais().entrySet()) {
+				tributos.merge(item.getKey(), item.getValue(), Integer::sum);
+			}
 		}
 		return new EfeitosColuna(cavalos, maos, tributos);
 	}
@@ -299,7 +302,11 @@ final class ComponentesKhan implements ComponentesPartida {
 		TipoBonus bonus = conselheiro.retirarBonus();
 		if (bonus != null) {
 			inventario.receberBonus(bonus);
-			if (bonus == TipoBonus.VOTO) { inventario.usarBonus(bonus); jogador.adicionarVotos(1); }
+			// O bônus de voto não fica guardado: vale na hora.
+			if (bonus == TipoBonus.VOTO) {
+				inventario.usarBonus(bonus);
+				jogador.adicionarVotos(1);
+			}
 		}
 		partida.concluirAcaoComplementar(true);
 		return true;

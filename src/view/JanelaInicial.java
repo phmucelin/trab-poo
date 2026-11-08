@@ -56,7 +56,7 @@ public class JanelaInicial extends JFrame {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static JComboBox<String>[] novosCombos() {
 		return new JComboBox[MAX_JOGADORES];
 	}

@@ -15,30 +15,82 @@ import model.ModelAPI;
 import model.ObservadoIF;
 import model.ObservadorIF;
 
+/** Janela da cartela; o seletor permite ver a cartela de qualquer jogador. */
 public final class JanelaCartela extends JFrame implements ObservadorIF {
 	private final PainelCartela cartela = new PainelCartela();
 	private final JComboBox<String> jogadores = new JComboBox<>();
+	// Enquanto o notify repreenche o combo, os eventos de seleção não podem
+	// voltar para o Controlador (senão a seleção vira um comando).
 	private boolean atualizando;
+
 	public JanelaCartela() {
-		super("Cartela"); setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); setLayout(new BorderLayout());
+		super("Cartela");
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		setLayout(new BorderLayout());
+
+		JButton fechar = new JButton("Fechar cartela");
+		jogadores.addActionListener(new Selecionar());
+		fechar.addActionListener(new Fechar());
+
 		JPanel comandos = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JButton fechar = new JButton("Fechar cartela"); jogadores.addActionListener(new Selecionar()); fechar.addActionListener(new Fechar());
-		comandos.add(jogadores); comandos.add(fechar); add(comandos, BorderLayout.NORTH); add(cartela, BorderLayout.CENTER);
-		addWindowListener(new Fechamento()); pack(); setResizable(false); setLocationRelativeTo(null);
-		Controlador.getInstance().registra(this); notify(ModelAPI.getInstance());
+		comandos.add(jogadores);
+		comandos.add(fechar);
+		add(comandos, BorderLayout.NORTH);
+		add(cartela, BorderLayout.CENTER);
+
+		addWindowListener(new Fechamento());
+		pack();
+		setResizable(false);
+		setLocationRelativeTo(null);
+		Controlador.getInstance().registra(this);
+		notify(ModelAPI.getInstance());
 	}
-	private class Selecionar implements ActionListener { @Override public void actionPerformed(ActionEvent evento) { if (!atualizando) Controlador.getInstance().selecionarCartela(jogadores.getSelectedIndex()); } }
-	private class Fechar implements ActionListener { @Override public void actionPerformed(ActionEvent evento) { Controlador.getInstance().fecharJanelaCartela(); } }
-	private class Fechamento extends WindowAdapter { @Override public void windowClosing(WindowEvent evento) { Controlador.getInstance().fecharJanelaCartela(); } }
-	@Override public void notify(ObservadoIF observado) {
-		ModelAPI m = (ModelAPI) observado; atualizando = true;
+
+	private class Selecionar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evento) {
+			if (!atualizando) {
+				Controlador.getInstance().selecionarCartela(jogadores.getSelectedIndex());
+			}
+		}
+	}
+
+	private class Fechar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evento) {
+			Controlador.getInstance().fecharJanelaCartela();
+		}
+	}
+
+	private class Fechamento extends WindowAdapter {
+		@Override
+		public void windowClosing(WindowEvent evento) {
+			Controlador.getInstance().fecharJanelaCartela();
+		}
+	}
+
+	@Override
+	public void notify(ObservadoIF observado) {
+		ModelAPI m = (ModelAPI) observado;
+		atualizando = true;
 		try {
 			jogadores.removeAllItems();
-			for (int i = 0; i < m.getNumJogadores(); i++) jogadores.addItem(m.getNomeJogador(i) + " — " + m.getHerdeiroJogador(i));
-			if (m.getJogadorCartela() >= 0) jogadores.setSelectedIndex(m.getJogadorCartela());
-		} finally { atualizando = false; }
-		cartela.repaint(); setVisible(m.isJanelaCartelaAberta());
+			for (int i = 0; i < m.getNumJogadores(); i++) {
+				jogadores.addItem(m.getNomeJogador(i) + " - " + m.getHerdeiroJogador(i));
+			}
+			if (m.getJogadorCartela() >= 0) {
+				jogadores.setSelectedIndex(m.getJogadorCartela());
+			}
+		} finally {
+			atualizando = false;
+		}
+		cartela.repaint();
+		setVisible(m.isJanelaCartelaAberta());
 	}
-	@Override public void dispose() { Controlador.getInstance().desregistra(this); super.dispose(); }
 
+	@Override
+	public void dispose() {
+		Controlador.getInstance().desregistra(this);
+		super.dispose();
+	}
 }
