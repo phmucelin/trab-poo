@@ -1,10 +1,9 @@
 # Parte 2: cartas, peças e pontuação
 
-> Atualização da revisão da 3ª iteração: o jogo usa `PecasDoJogo`, com cores
-> e pedidos conferidos nas imagens do EAD e multiplicidades 15/15/14 assumidas.
-> Jochi escolhe uma entre duas melhorias iniciais e pode ignorar a cor nas
-> compras. O restante deste documento registra os contratos e cenários
-> originais; o estado atual está em `docs/iteracao3.md`.
+> Desde a 3ª iteração o jogo usa o cadastro de `PecasDoJogo`, com pedidos e
+> cores conferidos nas imagens do EAD (a divisão 15/15/14 por cor é suposição
+> nossa). Este arquivo ficou como estava na parte 2; o estado atual das regras
+> está em `docs/iteracao3.md`.
 
 
 Implementação de Herdeiros de Khan baseada no `Regas.pdf` local, páginas impressas
