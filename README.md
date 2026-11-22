@@ -14,7 +14,7 @@ Pelo terminal, com um JDK 17 ou mais novo (os scripts respeitam `JAVA_HOME`):
 
 ```bash
 ./scripts/run_game.sh                 # compila e abre o jogo
-./scripts/run_tests.sh                # compila e roda os 212 testes
+./scripts/run_tests.sh                # compila e roda os 218 testes
 python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
 ```
 
@@ -32,9 +32,16 @@ python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
    Entregas (conselheiros e bônus) e Resultado.
 5. Os botões Ver cartas e Ver cartela abrem janelas próprias com as imagens do
    jogo.
+6. Antes de o jogador da vez começar a jogar, o botão **Salvar partida** grava
+   a partida num arquivo `.txt` escolhido no `JFileChooser`. Para continuar
+   depois, use **Carregar partida salva...** na primeira janela.
+7. No fim, a aba Resultado mostra o vencedor, e um diálogo pergunta se os
+   jogadores querem outra partida: Sim reabre a primeira janela; Não encerra.
+   Fechar o tabuleiro encerra o jogo a qualquer momento.
 
-Clique que a regra não permite é ignorado, e o jogo não usa caixas de
-diálogo: avisos e troca de turno aparecem nos próprios painéis.
+Clique que a regra não permite é ignorado. Avisos e troca de turno aparecem
+nos próprios painéis; os únicos diálogos são o de fim de partida e a
+confirmação ao substituir um arquivo salvo.
 
 ## Arquitetura
 
@@ -108,7 +115,7 @@ virou o quê:
 
 ## Testes
 
-São 212 testes JUnit 4. Os testes de regra trazem no Javadoc o objetivo, a
+São 218 testes JUnit 4. Os testes de regra trazem no Javadoc o objetivo, a
 entrada e a saída esperada. Alguns dos principais:
 
 - `TabuleiroTest` e `MapaOficialTest`: vizinhança, capacidade das paradas,
@@ -118,11 +125,15 @@ entrada e a saída esperada. Alguns dos principais:
 - `PartidaCompletaInterfaceTest`: parte de uma partida de dois jogadores
   criada por código e joga a escolha das cartas secretas e os turnos, até o
   fim, pelos controles Swing (botões e cliques no mapa).
-- `RegrasEmPartidasAleatoriasTest`: 40 partidas de quatro jogadores com
+- `RegrasEmPartidasAleatoriasTest`: 40 partidas de 2 a 5 jogadores com
   sorteio fixo, conferindo as regras do manual depois de cada jogada.
+- `SalvamentoTest`: salva partidas sorteadas, carrega e confere que a partida
+  recuperada é idêntica à original e continua igual até o fim.
 
 ## Documentação
 
+- [docs/iteracao4.md](docs/iteracao4.md): término da partida, salvamento e
+  recuperação (formato do arquivo e roteiro de teste).
 - [docs/iteracao3.md](docs/iteracao3.md): padrões, imagens, regras
   interpretadas e um roteiro para testar o jogo na mão.
 - [docs/regras-para-o-model.md](docs/regras-para-o-model.md): resumo das
@@ -132,4 +143,3 @@ entrada e a saída esperada. Alguns dos principais:
 - `docs/parte2-*`, `docs/parte3-*`, `docs/testes-parte*`: como cada parte da
   1ª iteração foi integrada e testada.
 
-Salvar e recuperar uma partida fica para a última iteração.
