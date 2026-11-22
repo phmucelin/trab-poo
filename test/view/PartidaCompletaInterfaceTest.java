@@ -113,6 +113,11 @@ public class PartidaCompletaInterfaceTest {
 		}
 	}
 	@Test public void partidaCompletaDaPreparacaoAoResultado() throws Exception {
+		// Sem isto o diálogo de fim de partida abriria de verdade e prenderia a fila de eventos.
+		Controlador.getInstance().setConfirmador(new controller.ConfirmadorNovaPartida() {
+			@Override public boolean confirmar(Component pai, String vencedores) { return false; }
+		});
+		Controlador.getInstance().setEncerrador(new Runnable() { @Override public void run() { } });
 		SwingUtilities.invokeAndWait(new Runnable() { @Override public void run() { jogarAteFim(); } });
 	}
 	private static String alvoAdjacenteOuProximo() {
