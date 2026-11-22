@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -251,17 +252,19 @@ final class ArquivoPartida {
 			linhasPremiadas.put(jogador, r.naoNegativo("linhasPremiadas"));
 			inventarios.put(jogador, new Inventario());
 		}
-		boolean[][] peoes = new boolean[jogadores.size()][2];
+		Set<Peao> posicionados = new HashSet<>();
 		for (Registro r : todos(registros, "PEAO")) {
 			Jogador jogador = jogador(jogadores, r);
 			int p = r.inteiro("peao");
 			if (p < 0 || p >= jogador.getPeoes().size()) throw r.erro("peão inexistente.");
 			tabuleiro.posicionarPeao(jogador.getPeao(p), parada(tabuleiro, r, "parada"));
-			peoes[jogadores.indexOf(jogador)][p] = true;
+			posicionados.add(jogador.getPeao(p));
 		}
 		for (int i = 0; i < jogadores.size(); i++) {
-			for (int p = 0; p < jogadores.get(i).getPeoes().size(); p++) {
-				if (!peoes[i][p]) throw new IllegalArgumentException("Falta a posição do peão " + p + " do jogador " + i + ".");
+			for (Peao peao : jogadores.get(i).getPeoes()) {
+				if (!posicionados.contains(peao)) {
+					throw new IllegalArgumentException("Falta a posição do peão " + peao.getIndice() + " do jogador " + i + ".");
+				}
 			}
 		}
 		for (Registro r : todos(registros, "TESOUROS_JOGADOR")) {

@@ -21,7 +21,8 @@ import java.util.Set;
  */
 class Partida {
 	static final String AREA_MELHORIAS = "AREA_MELHORIAS";
-	private static final int[] LIMITES_KURULTAI = { 0, 0, 10, 14, 16, 17 };
+	/** Limite do Kurultai pelo número de jogadores (índice): 10/14/16/17 para 2 a 5 (p. 14). */
+	private static final List<Integer> LIMITES_KURULTAI = List.of(0, 0, 10, 14, 16, 17);
 	private final Tabuleiro tabuleiro;
 	private final List<Jogador> jogadores;
 	private final ComponentesPartida componentes;
@@ -135,7 +136,7 @@ class Partida {
 	int getRodadaFinal() { return rodadaFinal; }
 	String getPosicaoKhan() { return posicaoKhan; }
 	int getPosicaoKurultai() { return posicaoKurultai; }
-	int getLimiteKurultai() { return LIMITES_KURULTAI[jogadores.size()]; }
+	int getLimiteKurultai() { return LIMITES_KURULTAI.get(jogadores.size()); }
 	int getEstoque(TipoTributo tipo) { return estoque.getOrDefault(tipo, 0); }
 	int getTesourosRecebidos(Jogador jogador) { return tesourosRecebidos.getOrDefault(jogador, 0); }
 	private boolean emAndamento() { return fase == Fase.EM_ANDAMENTO; }
