@@ -30,6 +30,7 @@ import org.junit.runners.Suite;
 	JochiTest.class,
 	PecasDoJogoTest.class,
 	RegrasEmPartidasAleatoriasTest.class,
+	SalvamentoTest.class,
 	view.PreparacaoInterfaceTest.class,
 	view.AcoesInterfaceTest.class,
 	view.MelhoriasInterfaceTest.class,
