@@ -34,6 +34,8 @@ final class Conselheiro {
 	Map<TipoTesouro, Integer> getPedido() { return pedido; }
 	int getVotos() { return parada.isKarakorum() ? 2 : 1; }
 	TipoBonus getBonus() { return bonus; }
+	/** Usado só por ArquivoPartida: null quando a peça de bônus já foi levada. */
+	void restaurarBonus(TipoBonus bonus) { this.bonus = bonus; }
 	TipoBonus retirarBonus() { TipoBonus recebido = bonus; bonus = null; return recebido; }
 	boolean aceita(Map<TipoTesouro, Integer> oferta) {
 		if (oferta == null || oferta.isEmpty()) return false;

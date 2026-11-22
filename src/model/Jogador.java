@@ -182,6 +182,24 @@ class Jogador {
 		votos += quantidade;
 	}
 
+	/** Usado só por ArquivoPartida, ao carregar uma partida salva. */
+	void restaurar(int yurts, Set<Coluna> fichas, Map<TipoTributo, Integer> tributos, int votos) {
+		if (yurts < 0 || yurts > YURTS_INICIAIS || votos < 0) {
+			throw new IllegalArgumentException("Yurts ou votos fora dos limites: " + nome);
+		}
+		yurtsDisponiveis = yurts;
+		fichasDisponiveis.clear();
+		fichasDisponiveis.addAll(fichas);
+		for (TipoTributo t : TipoTributo.values()) {
+			int quantidade = tributos.getOrDefault(t, 0);
+			if (quantidade < 0) {
+				throw new IllegalArgumentException("Tributo negativo: " + nome);
+			}
+			this.tributos.put(t, quantidade);
+		}
+		this.votos = votos;
+	}
+
 	@Override
 	public String toString() {
 		return nome + " (" + cor + ", " + herdeiro + ")";

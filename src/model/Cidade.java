@@ -110,6 +110,17 @@ class Cidade {
 		return true;
 	}
 
+	/** Usado só por ArquivoPartida, ao carregar uma partida salva. */
+	void restaurar(boolean revelada, int tesouros, Cor conquistador) {
+		if (tesouros < 0 || tesouros > TESOUROS_AO_REVELAR || (!revelada && (tesouros > 0 || conquistador != null))
+				|| (conquistador != null && tesouros > 0)) {
+			throw new IllegalArgumentException("Estado inválido da cidade " + nome);
+		}
+		this.revelada = revelada;
+		this.tesouros = tesouros;
+		this.yurtDeConquista = conquistador;
+	}
+
 	// --------------------------------------------------------------- conquista
 
 	boolean isConquistada() {
