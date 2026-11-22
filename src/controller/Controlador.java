@@ -1,5 +1,6 @@
 package controller;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -67,6 +68,11 @@ public final class Controlador {
 		}
 		new JanelaJogo().setVisible(true);
 		return true;
+	}
+
+	/** 4ª iteração: só é aceito antes de o jogador da vez começar a jogar. */
+	public boolean salvarPartida(File arquivo) {
+		return model.salvar(arquivo);
 	}
 
 	public boolean escolherMelhoriaInicial(int indice) { return model.escolherMelhoriaInicial(indice); }

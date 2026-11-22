@@ -38,7 +38,8 @@ import org.junit.runners.Suite;
 	view.PartidaCompletaInterfaceTest.class,
 	view.RotaInterfaceTest.class,
 	view.CatalogoImagensTest.class,
-	view.JanelaJogoTamanhoTest.class
+	view.JanelaJogoTamanhoTest.class,
+	view.SalvamentoInterfaceTest.class
 })
 public class TodosOsTestes {
 }

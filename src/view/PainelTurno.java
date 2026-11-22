@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -56,6 +59,8 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	private final JButton btCartas = new JButton("Ver cartas");
 	private final JButton btCartela = new JButton("Ver cartela");
 	private final JLabel lbDica = new JLabel(" ");
+	private final JButton btSalvar = new JButton("Salvar partida");
+	private final JLabel lbArquivo = new JLabel(" ");
 
 	/** Ativa a coluna informada no construtor (um tratador por botão). */
 	private class AcaoColuna implements ActionListener {
@@ -81,6 +86,36 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 
 	private class AbrirCartas implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartas(); } }
 	private class AbrirCartela implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartela(); } }
+
+	/**
+	 * 4ª iteração: o botão só fica habilitado antes de o jogador da vez
+	 * começar a jogar (o Observer liga e desliga conforme ModelAPI.podeSalvar).
+	 */
+	private class SalvarPartida implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser seletor = SeletorArquivo.criar("Salvar partida");
+			if (seletor.showSaveDialog(PainelTurno.this) != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File arquivo = seletor.getSelectedFile();
+			File comTxt = arquivo.getName().toLowerCase().endsWith(".txt") ? arquivo
+					: new File(arquivo.getParentFile(), arquivo.getName() + ".txt");
+			if (comTxt.exists() && JOptionPane.showConfirmDialog(PainelTurno.this,
+					"O arquivo " + comTxt.getName() + " já existe. Substituir?", "Salvar partida",
+					JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+				return;
+			}
+			SeletorArquivo.lembrar(comTxt);
+			if (Controlador.getInstance().salvarPartida(comTxt)) {
+				lbArquivo.setForeground(Color.DARK_GRAY);
+				lbArquivo.setText(html("Partida salva em " + PainelPreparacao.escapar(comTxt.getName()) + ".", 150));
+			} else {
+				lbArquivo.setForeground(new Color(180, 0, 0));
+				lbArquivo.setText(html(PainelPreparacao.escapar(ModelAPI.getInstance().getErroArquivo()), 150));
+			}
+		}
+	}
 
 	public PainelTurno() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -122,6 +157,12 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		btCartela.addActionListener(new AbrirCartela());
 		adicionar(btCartas);
 		adicionar(btCartela);
+		add(Box.createVerticalStrut(12));
+		btSalvar.setName("salvarPartida");
+		btSalvar.setToolTipText("Disponível só antes de o jogador da vez começar a jogar.");
+		btSalvar.addActionListener(new SalvarPartida());
+		adicionar(btSalvar);
+		adicionar(lbArquivo);
 		add(Box.createVerticalGlue());
 
 		Controlador.getInstance().registra(this);
@@ -196,6 +237,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		lbDica.setText(dica(m, ativada, khan));
 		btCartas.setEnabled(true);
 		btCartela.setEnabled(true);
+		btSalvar.setEnabled(m.podeSalvar());
 
 		revalidate();
 		repaint();
@@ -234,6 +276,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		btTerminar.setEnabled(valor);
 		btCartas.setEnabled(valor);
 		btCartela.setEnabled(valor);
+		btSalvar.setEnabled(valor);
 		lbPeao.setVisible(valor);
 		lbDica.setText(" ");
 	}
