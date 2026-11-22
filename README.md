@@ -20,8 +20,9 @@ python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
 
 ## Como jogar
 
-1. Na primeira janela, escolha de 2 a 5 jogadores, o nome de cada um e o
-   herdeiro (não pode repetir). Se algo estiver errado, o aviso aparece na
+1. Na primeira janela, escolha **Nova partida** ou **Continuar partida
+   salva...**. Na nova partida, escolha de 2 a 5 jogadores, o nome de cada um
+   e o herdeiro (não pode repetir). Se algo estiver errado, o aviso aparece na
    própria janela.
 2. Cada jogador vê suas duas cartas secretas e fica com uma. Quem jogar com
    Jochi escolhe também a melhoria inicial da coluna branca.
@@ -34,9 +35,10 @@ python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
    jogo.
 6. Antes de o jogador da vez começar a jogar, o botão **Salvar partida** grava
    a partida num arquivo `.txt` escolhido no `JFileChooser`. Para continuar
-   depois, use **Carregar partida salva...** na primeira janela.
+   depois, use **Continuar partida salva...** na primeira janela.
 7. No fim, a aba Resultado mostra o vencedor, e um diálogo pergunta se os
-   jogadores querem outra partida: Sim reabre a primeira janela; Não encerra.
+   jogadores querem outra partida: Sim reabre a escolha dos personagens; Não
+   encerra.
    Fechar o tabuleiro encerra o jogo a qualquer momento.
 
 Clique que a regra não permite é ignorado. Avisos e troca de turno aparecem

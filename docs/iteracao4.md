@@ -5,6 +5,14 @@ iterações anteriores, o término da partida e o salvamento e a recuperação.
 Nenhuma funcionalidade ficou pendente da 3ª iteração; esta iteração
 acrescenta as outras duas.
 
+## Janelas iniciais
+
+O enunciado da 2ª iteração pede duas janelas antes do tabuleiro. A
+`JanelaAbertura`, que o `Main` abre, oferece **Nova partida** ou **Continuar
+partida salva...**. "Nova partida" fecha a abertura e abre a `JanelaInicial`,
+a janela de escolha dos personagens; "Continuar" escolhe o arquivo no
+`JFileChooser` e abre o tabuleiro direto.
+
 ## Término da partida
 
 - Quando o último jogador da rodada final termina o turno, a aba Resultado
@@ -28,7 +36,7 @@ para aparecer depois que os observadores já mostraram o resultado.
 | 1. Salvar só antes de o jogador começar a jogar | O botão **Salvar partida** (aba Turno) fica habilitado só enquanto `ModelAPI.podeSalvar()` é verdadeiro. O `Turno` tem um indicador que liga na primeira ação aceita (ativar coluna, trocar o peão de Altani, usar bônus...), e o Observer desliga o botão. Ele volta a ligar no turno seguinte. |
 | 2. Arquivo texto ASCII puro | O arquivo é gravado e lido com `US_ASCII`. Acentos dos nomes viram `\uXXXX`. Um arquivo com byte fora do ASCII é recusado. |
 | 3. Nome e pasta livres, só o tipo pré-definido | O usuário escolhe nome e pasta; o filtro é `*.txt`, e `.txt` é acrescentado se faltar. |
-| 4. `JFileChooser` | `view.SeletorArquivo` cria o `JFileChooser` usado por **Salvar partida** e por **Carregar partida salva...** (janela inicial). |
+| 4. `JFileChooser` | `view.SeletorArquivo` cria o `JFileChooser` usado por **Salvar partida** e por **Continuar partida salva...** (janela de abertura). |
 
 ### O que vai no arquivo
 
@@ -73,8 +81,8 @@ motivo. A partida em memória fica como estava.
   `getErroArquivo()`.
 - `controller/Controlador`: `salvarPartida`, `carregarPartida`, a pergunta de
   fim de partida e `fimDaPartida(boolean)`.
-- `view/PainelTurno` (botão e mensagem), `view/JanelaInicial` (carregar) e
-  `view/SeletorArquivo`.
+- `view/PainelTurno` (botão e mensagem), `view/JanelaAbertura` (nova partida
+  ou continuar) e `view/SeletorArquivo`.
 
 ## Testes
 
@@ -94,12 +102,13 @@ motivo. A partida em memória fica como estava.
 
 ## Roteiro para testar na mão
 
-1. Rode `controller.Main`, inicie uma partida e conclua a preparação.
+1. Rode `controller.Main`, clique em **Nova partida**, escolha os personagens
+   e conclua a preparação.
 2. Antes de ativar uma coluna, clique em **Salvar partida** e grave, por
    exemplo, `teste`. O painel mostra "Partida salva em teste.txt".
 3. Ative uma coluna: o botão fica desabilitado até o próximo jogador.
 4. Feche o tabuleiro (a aplicação encerra) e rode o `Main` de novo.
-5. Clique em **Carregar partida salva...** e escolha `teste.txt`: a partida
+5. Clique em **Continuar partida salva...** e escolha `teste.txt`: a partida
    volta no mesmo ponto, com a mesma vez, peças e cartas.
 6. Para ver o fim da partida rapidamente, edite no arquivo a linha `PARTIDA`:
    ponha `vez` no último jogador e `rodadaFinal` igual a `rodada`. Carregue,
