@@ -9,12 +9,13 @@ import java.util.Set;
 
 /** Influência regional e desempates do manual, pp. 15-16. */
 final class Pontuacao {
-	private static final int[] PRIMEIRO = { 1, 1, 2, 2, 3 };
-	private static final int[] SEGUNDO = { 0, 1, 1, 2, 2 };
+	/** Votos por número de melhorias na coluna (0 a 4), tabela do tabuleiro (p. 15). */
+	private static final List<Integer> PRIMEIRO = List.of(1, 1, 2, 2, 3);
+	private static final List<Integer> SEGUNDO = List.of(0, 1, 1, 2, 2);
 	private Pontuacao() { }
 	static int votosPorMelhorias(int melhorias, boolean primeiro) {
 		if (melhorias < 0 || melhorias > 4) throw new IllegalArgumentException("Coluna comporta zero a quatro melhorias");
-		return (primeiro ? PRIMEIRO : SEGUNDO)[melhorias];
+		return (primeiro ? PRIMEIRO : SEGUNDO).get(melhorias);
 	}
 	static int influencia(Jogador jogador, Tabuleiro tabuleiro, Inventario inventario) {
 		int votos = 0;
