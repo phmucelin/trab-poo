@@ -107,6 +107,16 @@ final class ComponentesKhan implements ComponentesPartida {
 	int tesourosDescartados() { return descarteTesouros.size(); }
 	int melhoriasNaReserva() { return pilhaMelhorias.size(); }
 
+	// ------------------------------------------------- salvamento (4ª iteração)
+	Baralho getBaralhoAbertas() { return abertas; }
+	Baralho getBaralhoSecretas() { return secretas; }
+	/** Do fundo para o topo: a próxima peça retirada é a última. */
+	List<Melhoria> getPilhaMelhorias() { return List.copyOf(pilhaMelhorias); }
+	/** Do fundo para o topo: a próxima peça retirada é a última. */
+	List<TipoTesouro> getPilhaTesouros() { return List.copyOf(pilhaTesouros); }
+	List<TipoTesouro> getDescarteTesouros() { return List.copyOf(descarteTesouros); }
+	int getLinhasPremiadas(Jogador jogador) { return linhasPremiadas.getOrDefault(jogador, 0); }
+
 	boolean escolherCartaSecreta(Jogador jogador, Carta carta) {
 		if (partida == null || partida.getFase() != Fase.PREPARACAO || escolheramCarta.contains(jogador)
 				|| !secretas.cartasDe(jogador).contains(carta)) return false;
