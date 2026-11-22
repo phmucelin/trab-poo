@@ -129,6 +129,17 @@ public final class ModelAPI implements ObservadoIF {
 
 	public String getErroConfiguracao() { return erroConfiguracao; }
 
+	// ============================================================ salvamento (4ª iteração)
+
+	/**
+	 * Só é possível salvar imediatamente antes de o jogador da vez começar a
+	 * jogar: depois da primeira ação aceita, volta a ser possível só no turno
+	 * seguinte (enunciado da 4ª iteração, regra 1).
+	 */
+	public boolean podeSalvar() {
+		return partida != null && componentesKhan != null && partida.podeSalvar();
+	}
+
 	public boolean isPreparacao() {
 		return partida != null && partida.getFase() == Fase.PREPARACAO;
 	}
