@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,21 @@ public class JanelaInicial extends JFrame {
 		}
 	}
 
+	/** Escolhe um arquivo salvo e retoma a partida dele. */
+	private class AcaoCarregar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			File arquivo = SeletorArquivoPartida.paraAbrir(JanelaInicial.this);
+			if (arquivo == null) return;
+			if (Controlador.getInstance().carregarPartida(arquivo)) {
+				dispose();
+			} else {
+				lbAviso.setText("<html><div style='width:360px'>"
+						+ PainelPreparacao.escapar(Controlador.getInstance().getErroArquivo()) + "</div></html>");
+			}
+		}
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static JComboBox<String>[] novosCombos() {
 		return new JComboBox[MAX_JOGADORES];
@@ -96,8 +112,13 @@ public class JanelaInicial extends JFrame {
 		lbAviso.setForeground(new Color(180, 0, 0));
 		JButton btIniciar = new JButton("Iniciar partida");
 		btIniciar.addActionListener(new AcaoIniciar());
+		JButton btCarregar = new JButton("Carregar partida");
+		btCarregar.addActionListener(new AcaoCarregar());
+		JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+		botoes.add(btCarregar);
+		botoes.add(btIniciar);
 		base.add(lbAviso, BorderLayout.CENTER);
-		base.add(btIniciar, BorderLayout.EAST);
+		base.add(botoes, BorderLayout.EAST);
 		add(base, BorderLayout.SOUTH);
 
 		mostrarLinhas();

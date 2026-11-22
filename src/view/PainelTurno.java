@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,9 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 	private final JButton btCartas = new JButton("Ver cartas");
 	private final JButton btCartela = new JButton("Ver cartela");
 	private final JLabel lbDica = new JLabel(" ");
+	private final JButton btSalvar = new JButton("Salvar partida");
+	private final JButton btCarregar = new JButton("Carregar partida");
+	private final JLabel lbArquivo = new JLabel(" ");
 
 	/** Ativa a coluna informada no construtor (um tratador por botão). */
 	private class AcaoColuna implements ActionListener {
@@ -81,6 +85,28 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 
 	private class AbrirCartas implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartas(); } }
 	private class AbrirCartela implements ActionListener { @Override public void actionPerformed(ActionEvent e) { Controlador.getInstance().abrirJanelaCartela(); } }
+
+	/** Salvar: só habilitado antes de o jogador começar a jogar. */
+	private class AcaoSalvar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			File arquivo = SeletorArquivoPartida.paraSalvar(PainelTurno.this);
+			if (arquivo == null) return;
+			boolean salvou = Controlador.getInstance().salvarPartida(arquivo);
+			lbArquivo.setText(html(salvou ? "Partida salva em " + PainelPreparacao.escapar(arquivo.getName()) + "."
+					: PainelPreparacao.escapar(Controlador.getInstance().getErroArquivo()), 150));
+		}
+	}
+
+	private class AcaoCarregar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			File arquivo = SeletorArquivoPartida.paraAbrir(PainelTurno.this);
+			if (arquivo == null) return;
+			boolean carregou = Controlador.getInstance().carregarPartida(arquivo);
+			lbArquivo.setText(carregou ? " " : html(PainelPreparacao.escapar(Controlador.getInstance().getErroArquivo()), 150));
+		}
+	}
 
 	public PainelTurno() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -122,6 +148,12 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		btCartela.addActionListener(new AbrirCartela());
 		adicionar(btCartas);
 		adicionar(btCartela);
+		add(Box.createVerticalStrut(12));
+		btSalvar.addActionListener(new AcaoSalvar());
+		btCarregar.addActionListener(new AcaoCarregar());
+		adicionar(btSalvar);
+		adicionar(btCarregar);
+		adicionar(lbArquivo);
 		add(Box.createVerticalGlue());
 
 		Controlador.getInstance().registra(this);
@@ -196,6 +228,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		lbDica.setText(dica(m, ativada, khan));
 		btCartas.setEnabled(true);
 		btCartela.setEnabled(true);
+		btSalvar.setEnabled(m.podeSalvar());
 
 		revalidate();
 		repaint();
@@ -234,6 +267,7 @@ public class PainelTurno extends JPanel implements ObservadorIF {
 		btTerminar.setEnabled(valor);
 		btCartas.setEnabled(valor);
 		btCartela.setEnabled(valor);
+		btSalvar.setEnabled(valor);
 		lbPeao.setVisible(valor);
 		lbDica.setText(" ");
 	}
