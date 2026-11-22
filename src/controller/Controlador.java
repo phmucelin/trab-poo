@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import view.JanelaAbertura;
 import view.JanelaInicial;
 import view.JanelaJogo;
 import view.JanelaCartas;
@@ -56,7 +57,18 @@ public final class Controlador {
 		model.remove(o);
 	}
 
-	/** Abre a janela de configuração da partida (chamado por Main). */
+	/**
+	 * Primeira janela (chamada por Main): nova partida ou continuar uma
+	 * partida salva.
+	 */
+	public void abrirJanelaAbertura() {
+		new JanelaAbertura().setVisible(true);
+	}
+
+	/**
+	 * Janela de escolha dos personagens: aberta por "Nova partida" na
+	 * JanelaAbertura e reaberta quando os jogadores pedem outra partida.
+	 */
 	public void abrirJanelaInicial() {
 		new JanelaInicial().setVisible(true);
 	}
@@ -76,7 +88,7 @@ public final class Controlador {
 
 	/**
 	 * 4ª iteração: recupera a partida gravada no arquivo escolhido pela
-	 * JanelaInicial. Se o arquivo for inválido, devolve false e a partida em
+	 * JanelaAbertura. Se o arquivo for inválido, devolve false e a partida em
 	 * memória fica como estava; ModelAPI.getErroArquivo() diz o motivo.
 	 */
 	public boolean carregarPartida(File arquivo) {
