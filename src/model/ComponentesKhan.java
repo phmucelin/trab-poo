@@ -117,6 +117,46 @@ final class ComponentesKhan implements ComponentesPartida {
 	List<TipoTesouro> getDescarteTesouros() { return List.copyOf(descarteTesouros); }
 	int getLinhasPremiadas(Jogador jogador) { return linhasPremiadas.getOrDefault(jogador, 0); }
 
+	/**
+	 * Usado só por ArquivoPartida: troca o estado sorteado na preparação pelo
+	 * estado gravado entre dois turnos. Os baralhos são restaurados à parte.
+	 * Entre turnos não há escolha pendente: carta secreta, melhoria inicial de
+	 * Jochi e tesouro de bônus já foram resolvidos.
+	 */
+	void restaurar(Map<Jogador, Inventario> novosInventarios, Map<Jogador, Integer> linhas, List<Melhoria> pilha,
+			List<Melhoria> novoMercado, List<TipoTesouro> novaPilhaTesouros, List<TipoTesouro> novoDescarte,
+			Map<Cidade, List<TipoTesouro>> novosTesourosCidades, List<Carta> novasAbertas, Map<Parada, TipoBonus> bonus) {
+		if (novoMercado.size() > 5 || novasAbertas.size() > 4) throw new IllegalArgumentException("Mercado ou cartas abertas demais");
+		for (Jogador jogador : partida.getJogadores()) {
+			if (!novosInventarios.containsKey(jogador)) throw new IllegalArgumentException("Falta a cartela de " + jogador.getNome());
+		}
+		inventarios.clear();
+		inventarios.putAll(novosInventarios);
+		linhasPremiadas.clear();
+		for (Jogador jogador : partida.getJogadores()) linhasPremiadas.put(jogador, linhas.getOrDefault(jogador, 0));
+		escolheramCarta.clear();
+		escolheramCarta.addAll(partida.getJogadores());
+		escolhasIniciais.clear();
+		escolhasTesouro.clear();
+		pilhaMelhorias.clear();
+		pilhaMelhorias.addAll(pilha);
+		mercado.clear();
+		mercado.addAll(novoMercado);
+		pilhaTesouros.clear();
+		pilhaTesouros.addAll(novaPilhaTesouros);
+		descarteTesouros.clear();
+		descarteTesouros.addAll(novoDescarte);
+		tesourosCidades.clear();
+		tesourosCidades.putAll(novosTesourosCidades);
+		cartasAbertas.clear();
+		cartasAbertas.addAll(novasAbertas);
+		for (Map.Entry<Parada, Conselheiro> item : conselheiros.entrySet()) item.getValue().restaurarBonus(bonus.get(item.getKey()));
+		turnoAtivado = -1;
+		pontuou = false;
+		votosInfluenciaFinal.clear();
+		votosSecretosFinal.clear();
+	}
+
 	boolean escolherCartaSecreta(Jogador jogador, Carta carta) {
 		if (partida == null || partida.getFase() != Fase.PREPARACAO || escolheramCarta.contains(jogador)
 				|| !secretas.cartasDe(jogador).contains(carta)) return false;

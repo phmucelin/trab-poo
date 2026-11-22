@@ -106,6 +106,15 @@ class Parada {
 		return Collections.unmodifiableList(yurts);
 	}
 
+	/** Usado só por ArquivoPartida: troca os yurts pelos gravados, na mesma ordem. */
+	void restaurarYurts(List<Cor> cores) {
+		if (!tipo.equals(TipoParada.KARAKORUM) && cores.size() > tipo.getCapacidadeYurts()) {
+			throw new IllegalArgumentException("Yurts demais na parada " + nome);
+		}
+		yurts.clear();
+		yurts.addAll(cores);
+	}
+
 	/** Se ainda cabe um yurt aqui segundo a capacidade do tipo da parada. */
 	boolean podeReceberYurt() {
 		return yurts.size() < tipo.getCapacidadeYurts();

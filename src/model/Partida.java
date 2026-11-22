@@ -147,6 +147,39 @@ class Partida {
 	 */
 	boolean podeSalvar() { return emAndamento() && !turno.foiIniciado(); }
 
+	/**
+	 * Usado só por ArquivoPartida: recoloca o estado gravado entre dois turnos.
+	 * Jogadores, tabuleiro e componentes já devem estar restaurados.
+	 */
+	void restaurar(int indiceJogador, int rodada, int rodadaFinal, int posicaoKurultai, String posicaoKhan,
+			int numeroTurno, Map<TipoTributo, Integer> estoque, Map<Jogador, Integer> tesourosRecebidos, List<Cidade> fechadas) {
+		if (indiceJogador < 0 || indiceJogador >= jogadores.size() || rodada < 1 || numeroTurno < 1
+				|| (rodadaFinal != -1 && rodadaFinal < rodada) || posicaoKurultai < 0) {
+			throw new IllegalArgumentException("Dados da partida fora dos limites");
+		}
+		fase = Fase.EM_ANDAMENTO;
+		this.indiceJogador = indiceJogador;
+		this.rodada = rodada;
+		this.rodadaFinal = rodadaFinal;
+		this.posicaoKurultai = posicaoKurultai;
+		this.posicaoKhan = posicaoKhan;
+		this.estoque.clear();
+		for (TipoTributo tipo : TipoTributo.values()) {
+			int quantidade = estoque.getOrDefault(tipo, 0);
+			if (quantidade < 0) throw new IllegalArgumentException("Estoque negativo de " + tipo);
+			this.estoque.put(tipo, quantidade);
+		}
+		this.tesourosRecebidos.clear();
+		votosRegistrados.clear();
+		for (Jogador jogador : jogadores) {
+			this.tesourosRecebidos.put(jogador, tesourosRecebidos.getOrDefault(jogador, 0));
+			votosRegistrados.put(jogador, jogador.getVotos());
+		}
+		cidadesFechadas.clear();
+		cidadesFechadas.addAll(fechadas);
+		turno = novoTurno(numeroTurno);
+	}
+
 	boolean ativarColuna(Coluna coluna) {
 		Jogador jogador = getJogadorDaVez();
 		if (!emAndamento() || coluna == null || turno.getColuna() != null || !jogador.temFichaDisponivel(coluna)) return false;

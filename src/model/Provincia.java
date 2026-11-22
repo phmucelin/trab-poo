@@ -85,6 +85,14 @@ class Provincia {
 
 	// ------------------------------------------------------------------ peças
 
+	/** Usado só por ArquivoPartida, ao carregar uma partida salva. */
+	void restaurarPecas(int quantidade) {
+		if (quantidade < 0 || quantidade > MAXIMO_PECAS) {
+			throw new IllegalArgumentException("Província com peças fora do limite: " + nome);
+		}
+		pecas = quantidade;
+	}
+
 	int getPecas() {
 		return pecas;
 	}

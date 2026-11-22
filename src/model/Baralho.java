@@ -49,4 +49,28 @@ final class Baralho {
 	List<Carta> getDescarte() { return List.copyOf(descarte); }
 	/** Pilha fechada, do fundo para o topo (a próxima compra é a última). */
 	List<Carta> getPilha() { return List.copyOf(pilha); }
+	/** Todas as cartas deste baralho, onde quer que estejam. */
+	List<Carta> todas() {
+		List<Carta> cartas = new ArrayList<>(pilha);
+		cartas.addAll(compradas);
+		cartas.addAll(descarte);
+		return cartas;
+	}
+	/**
+	 * Usado só por ArquivoPartida. As cartas fora da pilha e do descarte ficam
+	 * com os jogadores ou expostas na mesa (as abertas).
+	 */
+	void restaurar(List<Carta> novaPilha, List<Carta> novoDescarte, Map<Jogador, List<Carta>> maos, List<Carta> naMesa) {
+		pilha.clear();
+		pilha.addAll(novaPilha);
+		descarte.clear();
+		descarte.addAll(novoDescarte);
+		cartasPorJogador.clear();
+		compradas.clear();
+		for (Map.Entry<Jogador, List<Carta>> mao : maos.entrySet()) {
+			cartasPorJogador.put(mao.getKey(), new ArrayList<>(mao.getValue()));
+			compradas.addAll(mao.getValue());
+		}
+		compradas.addAll(naMesa);
+	}
 }
