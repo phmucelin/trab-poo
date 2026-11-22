@@ -103,8 +103,7 @@ enum Herdeiro {
 	 * Composição de ações impressa em uma coluna da cartela. Imutável.
 	 *
 	 * As melhorias compradas durante a partida aumentam essas quantidades;
-	 * isso será tratado pela classe que modelar o tabuleiro do jogador com as
-	 * melhorias (fora do escopo desta iteração).
+	 * isso é somado por ComponentesKhan.efeitosDasMelhorias.
 	 */
 	static final class AcoesColuna {
 		private final int cavalos;

@@ -182,6 +182,25 @@ class Jogador {
 		votos += quantidade;
 	}
 
+	/**
+	 * Recoloca o estado de um jogador salvo (4ª iteração). Só o
+	 * SalvamentoPartida chama, e antes de a partida existir.
+	 */
+	void restaurar(int yurts, Set<Coluna> fichas, Map<TipoTributo, Integer> pecas, int votosSalvos) {
+		if (yurts < 0 || yurts > YURTS_INICIAIS || votosSalvos < 0) {
+			throw new IllegalArgumentException("Yurts ou votos inválidos para " + nome);
+		}
+		yurtsDisponiveis = yurts;
+		fichasDisponiveis.clear();
+		fichasDisponiveis.addAll(fichas);
+		for (TipoTributo t : TipoTributo.values()) {
+			int n = pecas.getOrDefault(t, 0);
+			if (n < 0) throw new IllegalArgumentException("Tributo negativo para " + nome);
+			tributos.put(t, n);
+		}
+		votos = votosSalvos;
+	}
+
 	@Override
 	public String toString() {
 		return nome + " (" + cor + ", " + herdeiro + ")";

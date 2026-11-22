@@ -98,6 +98,14 @@ class Provincia {
 	 *
 	 * @return true se a peça foi colocada
 	 */
+	/** Recoloca as peças de uma província salva (4ª iteração). */
+	void restaurarPecas(int quantidade) {
+		if (quantidade < 0 || quantidade > MAXIMO_PECAS) {
+			throw new IllegalArgumentException("Peças inválidas na província " + nome);
+		}
+		pecas = quantidade;
+	}
+
 	boolean colocarPeca() {
 		if (pecas >= MAXIMO_PECAS) {
 			return false;

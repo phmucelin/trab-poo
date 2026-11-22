@@ -47,4 +47,24 @@ final class Baralho {
 		return true;
 	}
 	List<Carta> getDescarte() { return List.copyOf(descarte); }
+	/** Pilha de compra, do fundo (índice 0) ao topo (último índice). */
+	List<Carta> getPilha() { return List.copyOf(pilha); }
+	/**
+	 * Recoloca o baralho salvo. descartadas vem da mais recente para a mais
+	 * antiga (a ordem de getDescarte); emJogo são as cartas já compradas que
+	 * não estão nas mãos (as abertas viradas).
+	 */
+	void restaurar(List<Carta> novaPilha, List<Carta> descartadas, Map<Jogador, List<Carta>> maos, List<Carta> emJogo) {
+		pilha.clear();
+		pilha.addAll(novaPilha);
+		descarte.clear();
+		for (int i = descartadas.size() - 1; i >= 0; i--) descarte.push(descartadas.get(i));
+		cartasPorJogador.clear();
+		compradas.clear();
+		for (Map.Entry<Jogador, List<Carta>> mao : maos.entrySet()) {
+			cartasPorJogador.put(mao.getKey(), new ArrayList<>(mao.getValue()));
+			compradas.addAll(mao.getValue());
+		}
+		compradas.addAll(emJogo);
+	}
 }

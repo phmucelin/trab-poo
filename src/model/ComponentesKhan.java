@@ -40,6 +40,81 @@ final class ComponentesKhan implements ComponentesPartida {
 	private final Map<Jogador, Integer> votosInfluenciaFinal = new HashMap<>();
 	private final Map<Jogador, Integer> votosSecretosFinal = new HashMap<>();
 
+	/**
+	 * Tudo o que a partida salva guarda além do tabuleiro e dos jogadores.
+	 * Listas de pilhas vão do fundo ao topo; descartes, do mais recente ao mais antigo.
+	 */
+	static final class Dados {
+		List<Carta> abertasPilha = new ArrayList<>(), abertasDescarte = new ArrayList<>(), cartasAbertas = new ArrayList<>();
+		List<Carta> secretasPilha = new ArrayList<>(), secretasDescarte = new ArrayList<>();
+		Map<Jogador, List<Carta>> maos = new HashMap<>();
+		Map<Jogador, Inventario> inventarios = new HashMap<>();
+		Map<Jogador, Integer> linhasPremiadas = new HashMap<>();
+		List<Melhoria> pilhaMelhorias = new ArrayList<>(), mercado = new ArrayList<>();
+		/** Nome da parada do conselheiro para o bônus que ainda não foi retirado (ausente se já foi). */
+		Map<String, TipoBonus> bonus = new HashMap<>();
+		List<TipoTesouro> pilhaTesouros = new ArrayList<>(), descarteTesouros = new ArrayList<>();
+		Map<Cidade, List<TipoTesouro>> tesourosCidades = new HashMap<>();
+	}
+
+	/** Foto do estado atual, para salvar. Só vale no início de um turno. */
+	Dados exportar() {
+		Dados d = new Dados();
+		d.abertasPilha = abertas.getPilha();
+		d.abertasDescarte = abertas.getDescarte();
+		d.cartasAbertas = new ArrayList<>(cartasAbertas);
+		d.secretasPilha = secretas.getPilha();
+		d.secretasDescarte = secretas.getDescarte();
+		for (Jogador jogador : partida.getJogadores()) {
+			d.maos.put(jogador, secretas.cartasDe(jogador));
+			d.inventarios.put(jogador, inventarioDe(jogador));
+			d.linhasPremiadas.put(jogador, linhasPremiadas.getOrDefault(jogador, 0));
+		}
+		d.pilhaMelhorias = new ArrayList<>(pilhaMelhorias);
+		d.mercado = new ArrayList<>(mercado);
+		for (Conselheiro c : conselheiros.values()) if (c.getBonus() != null) d.bonus.put(c.getParada().getNome(), c.getBonus());
+		d.pilhaTesouros = new ArrayList<>(pilhaTesouros);
+		d.descarteTesouros = new ArrayList<>(descarteTesouros);
+		for (Map.Entry<Cidade, List<TipoTesouro>> e : tesourosCidades.entrySet()) d.tesourosCidades.put(e.getKey(), new ArrayList<>(e.getValue()));
+		return d;
+	}
+
+	/**
+	 * Substitui o conteúdo sorteado no construtor pelo da partida salva. Cada
+	 * jogador já escolheu a carta secreta e não há escolha pendente.
+	 */
+	void restaurar(Partida partida, Dados d) {
+		if (partida == null || this.partida != null) throw new IllegalStateException("Componentes já vinculados ou partida ausente");
+		this.partida = partida;
+		abertas.restaurar(d.abertasPilha, d.abertasDescarte, Map.of(), d.cartasAbertas);
+		secretas.restaurar(d.secretasPilha, d.secretasDescarte, d.maos, List.of());
+		cartasAbertas.clear();
+		cartasAbertas.addAll(d.cartasAbertas);
+		pilhaMelhorias.clear();
+		pilhaMelhorias.addAll(d.pilhaMelhorias);
+		mercado.clear();
+		mercado.addAll(d.mercado);
+		pilhaTesouros.clear();
+		pilhaTesouros.addAll(d.pilhaTesouros);
+		descarteTesouros.clear();
+		descarteTesouros.addAll(d.descarteTesouros);
+		tesourosCidades.clear();
+		for (Map.Entry<Cidade, List<TipoTesouro>> e : d.tesourosCidades.entrySet()) tesourosCidades.put(e.getKey(), new ArrayList<>(e.getValue()));
+		inventarios.clear();
+		inventarios.putAll(d.inventarios);
+		linhasPremiadas.clear();
+		linhasPremiadas.putAll(d.linhasPremiadas);
+		escolheramCarta.clear();
+		escolheramCarta.addAll(partida.getJogadores());
+		escolhasIniciais.clear();
+		escolhasTesouro.clear();
+		for (Conselheiro c : conselheiros.values()) c.restaurarBonus(d.bonus.get(c.getParada().getNome()));
+		turnoAtivado = -1;
+		pontuou = false;
+		votosInfluenciaFinal.clear();
+		votosSecretosFinal.clear();
+	}
+
 	ComponentesKhan(List<Melhoria> melhorias, List<Conselheiro> conselheiros, Random random) {
 		if (melhorias == null || conselheiros == null || random == null
 				|| melhorias.stream().anyMatch(m -> m == null) || new HashSet<>(melhorias).size() != melhorias.size()) {

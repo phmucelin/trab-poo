@@ -484,6 +484,49 @@ public final class ModelAPI implements ObservadoIF {
 		return true;
 	}
 
+	// ============================================================ salvar e recuperar
+
+	/** Só no início do turno, antes de o jogador da vez ativar uma coluna (4ª iteração, regra 1). */
+	public boolean podeSalvar() {
+		return partida != null && componentesKhan != null && partida.podeSalvar();
+	}
+
+	/**
+	 * Estado da partida em linhas de texto ASCII, prontas para gravar num
+	 * arquivo. Lista vazia se não for possível salvar agora.
+	 */
+	public List<String> gerarSalvamento() {
+		if (!podeSalvar()) {
+			return new ArrayList<>();
+		}
+		return SalvamentoPartida.gravar(partida, componentesKhan);
+	}
+
+	/**
+	 * Substitui a partida atual pela salva nas linhas. Se as linhas forem
+	 * inválidas, devolve false, deixa a partida atual intacta e põe a causa
+	 * em getErroConfiguracao().
+	 */
+	public boolean restaurarPartida(List<String> linhas) {
+		erroConfiguracao = "";
+		SalvamentoPartida.Restaurado lida;
+		try {
+			lida = SalvamentoPartida.ler(linhas);
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			erroConfiguracao = e.getMessage() == null ? "Arquivo de partida inválido." : e.getMessage();
+			return false;
+		}
+		partida = lida.partida;
+		componentesKhan = lida.componentes;
+		jogadorPreparando = -1;
+		cartaSecretaVisivel = false;
+		janelaCartasAberta = false;
+		janelaCartelaAberta = false;
+		jogadorCartela = partida.getIndiceJogador();
+		notificar();
+		return true;
+	}
+
 	// ============================================================ ações e recursos
 
 	public boolean isPartidaCompleta() { return componentesKhan != null; }

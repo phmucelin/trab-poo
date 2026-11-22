@@ -112,6 +112,17 @@ class Cidade {
 
 	// --------------------------------------------------------------- conquista
 
+	/** Recoloca o estado de uma cidade salva (4ª iteração). */
+	void restaurar(boolean reveladaSalva, int tesourosSalvos, Cor conquistadaPor) {
+		if (tesourosSalvos < 0 || (!reveladaSalva && (tesourosSalvos != 0 || conquistadaPor != null))
+				|| (conquistadaPor != null && tesourosSalvos != 0)) {
+			throw new IllegalArgumentException("Estado inválido da cidade " + nome);
+		}
+		revelada = reveladaSalva;
+		tesouros = tesourosSalvos;
+		yurtDeConquista = conquistadaPor;
+	}
+
 	boolean isConquistada() {
 		return yurtDeConquista != null;
 	}

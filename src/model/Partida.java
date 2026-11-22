@@ -119,6 +119,49 @@ class Partida {
 		}
 	}
 
+	/** Estado de uma partida salva; só vale no início de um turno (4ª iteração). */
+	static final class Estado {
+		int vez, rodada, rodadaFinal, kurultai, turno;
+		String khan;
+		final Map<TipoTributo, Integer> estoque = new EnumMap<>(TipoTributo.class);
+		final Map<Jogador, Integer> tesourosRecebidos = new HashMap<>();
+		final List<Cidade> cidadesFechadas = new ArrayList<>();
+	}
+
+	/**
+	 * Reconstrói a partida salva sem refazer a preparação: jogadores, tabuleiro
+	 * e componentes já chegam com o estado restaurado. O turno é sempre o de
+	 * começo de turno, sem coluna ativada.
+	 */
+	static Partida restaurar(Tabuleiro tabuleiro, List<Jogador> jogadores, ComponentesKhan componentes,
+			Estado estado, ComponentesKhan.Dados dados) {
+		Partida partida = new Partida(tabuleiro, jogadores, componentes, estado);
+		componentes.restaurar(partida, dados);
+		return partida;
+	}
+
+	private Partida(Tabuleiro tabuleiro, List<Jogador> jogadores, ComponentesPartida componentes, Estado estado) {
+		this.tabuleiro = tabuleiro;
+		this.jogadores = Collections.unmodifiableList(new ArrayList<>(jogadores));
+		this.componentes = componentes;
+		fase = Fase.EM_ANDAMENTO;
+		indiceJogador = estado.vez;
+		rodada = estado.rodada;
+		rodadaFinal = estado.rodadaFinal;
+		posicaoKurultai = estado.kurultai;
+		posicaoKhan = estado.khan;
+		estoque.putAll(estado.estoque);
+		tesourosRecebidos.putAll(estado.tesourosRecebidos);
+		for (Jogador jogador : jogadores) votosRegistrados.put(jogador, jogador.getVotos());
+		cidadesFechadas.addAll(estado.cidadesFechadas);
+		turno = novoTurno(estado.turno);
+	}
+
+	/** Só se pode salvar antes de o jogador da vez começar a jogar (4ª iteração, regra 1). */
+	boolean podeSalvar() { return emAndamento() && turno.getColuna() == null; }
+	int getIndiceJogador() { return indiceJogador; }
+	List<Cidade> getCidadesFechadas() { return List.copyOf(cidadesFechadas); }
+
 	boolean iniciar() {
 		if (fase != Fase.PREPARACAO || !componentes.preparacaoConcluida()) return false;
 		fase = Fase.EM_ANDAMENTO;
