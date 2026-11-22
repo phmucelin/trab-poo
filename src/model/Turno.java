@@ -18,6 +18,8 @@ final class Turno {
 	private boolean recuperarFichas;
 	private boolean peaoAgiu;
 	private boolean habilidadeUsada;
+	/** Liga na primeira ação aceita do jogador da vez; antes disso a partida pode ser salva. */
+	private boolean iniciado;
 	private final Set<Parada> visitadas = new HashSet<>();
 	private final Map<Cidade, Integer> ataquesPorCidade = new HashMap<>();
 	private final Map<TipoTributo, Integer> virtuais = new EnumMap<>(TipoTributo.class);
@@ -39,6 +41,8 @@ final class Turno {
 	boolean recuperaFichas() { return recuperarFichas; }
 	boolean peaoJaAgiu() { return peaoAgiu; }
 	boolean habilidadeUsada() { return habilidadeUsada; }
+	boolean foiIniciado() { return iniciado; }
+	void marcarInicio() { iniciado = true; }
 	int getRecursoVirtual(TipoTributo tipo) { return virtuais.getOrDefault(tipo, 0); }
 	int getTesouroVirtual(TipoTesouro tipo) { return tesourosVirtuais.getOrDefault(tipo, 0); }
 	void adicionarTesouroVirtual(TipoTesouro tipo) {

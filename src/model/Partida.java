@@ -140,6 +140,12 @@ class Partida {
 	int getTesourosRecebidos(Jogador jogador) { return tesourosRecebidos.getOrDefault(jogador, 0); }
 	private boolean emAndamento() { return fase == Fase.EM_ANDAMENTO; }
 
+	/**
+	 * 4ª iteração: a partida só precisa ser salva imediatamente antes de o
+	 * jogador da vez começar a jogar, isto é, antes da primeira ação aceita.
+	 */
+	boolean podeSalvar() { return emAndamento() && !turno.foiIniciado(); }
+
 	boolean ativarColuna(Coluna coluna) {
 		Jogador jogador = getJogadorDaVez();
 		if (!emAndamento() || coluna == null || turno.getColuna() != null || !jogador.temFichaDisponivel(coluna)) return false;
@@ -156,6 +162,7 @@ class Partida {
 		if (!emAndamento() || turno.peaoJaAgiu() || indice < 0 || indice >= jogador.getPeoes().size()) return false;
 		Peao peao = jogador.getPeao(indice);
 		turno.escolherPeao(peao, tabuleiro.posicaoDe(peao));
+		turno.marcarInicio();
 		return true;
 	}
 
@@ -390,6 +397,7 @@ class Partida {
 		return new Turno(numero, peao, tabuleiro.posicaoDe(peao));
 	}
 	private void concluirAcao() {
+		turno.marcarInicio();
 		componentes.aposAcao(this);
 		sincronizarVotosEGatilhos();
 	}
