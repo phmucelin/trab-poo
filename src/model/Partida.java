@@ -139,6 +139,7 @@ class Partida {
 	int getEstoque(TipoTributo tipo) { return estoque.getOrDefault(tipo, 0); }
 	int getTesourosRecebidos(Jogador jogador) { return tesourosRecebidos.getOrDefault(jogador, 0); }
 	private boolean emAndamento() { return fase == Fase.EM_ANDAMENTO; }
+	List<Cidade> getCidadesFechadas() { return List.copyOf(cidadesFechadas); }
 
 	/**
 	 * 4ª iteração: a partida só precisa ser salva imediatamente antes de o

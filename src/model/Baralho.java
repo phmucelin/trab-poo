@@ -47,4 +47,6 @@ final class Baralho {
 		return true;
 	}
 	List<Carta> getDescarte() { return List.copyOf(descarte); }
+	/** Pilha fechada, do fundo para o topo (a próxima compra é a última). */
+	List<Carta> getPilha() { return List.copyOf(pilha); }
 }

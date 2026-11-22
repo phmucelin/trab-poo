@@ -55,6 +55,8 @@ final class Inventario {
 		adquiridaNoTurno.put(melhoria, turno);
 		return true;
 	}
+	/** Turno em que a melhoria entrou na cartela; -1 se não está nela. */
+	int turnoDeAquisicao(Melhoria melhoria) { return adquiridaNoTurno.getOrDefault(melhoria, -1); }
 	boolean podeAtivar(Melhoria melhoria, int turno) {
 		return adquiridaNoTurno.containsKey(melhoria) && adquiridaNoTurno.get(melhoria) < turno;
 	}

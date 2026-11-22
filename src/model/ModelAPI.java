@@ -40,6 +40,7 @@ public final class ModelAPI implements ObservadoIF {
 	private int jogadorCartela = -1;
 	private boolean janelaCartasAberta;
 	private boolean janelaCartelaAberta;
+	private String erroArquivo = "";
 
 	private ModelAPI() {
 	}
@@ -138,6 +139,38 @@ public final class ModelAPI implements ObservadoIF {
 	 */
 	public boolean podeSalvar() {
 		return partida != null && componentesKhan != null && partida.podeSalvar();
+	}
+
+	/**
+	 * Grava o estado da partida num arquivo texto ASCII. A extensão .txt é
+	 * acrescentada se faltar. Em caso de falha, getErroArquivo() diz o motivo.
+	 */
+	public boolean salvar(java.io.File arquivo) {
+		erroArquivo = "";
+		if (!podeSalvar()) {
+			erroArquivo = "A partida só pode ser salva antes de o jogador da vez começar a jogar.";
+			return false;
+		}
+		if (arquivo == null) {
+			erroArquivo = "Escolha um arquivo.";
+			return false;
+		}
+		java.io.File destino = comExtensaoTxt(arquivo);
+		try {
+			java.nio.file.Files.write(destino.toPath(), ArquivoPartida.gravar(partida, componentesKhan),
+					java.nio.charset.StandardCharsets.US_ASCII);
+		} catch (java.io.IOException | RuntimeException e) {
+			erroArquivo = "Não foi possível gravar " + destino.getName() + ": " + e.getMessage();
+			return false;
+		}
+		return true;
+	}
+
+	public String getErroArquivo() { return erroArquivo; }
+
+	private static java.io.File comExtensaoTxt(java.io.File arquivo) {
+		return arquivo.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".txt") ? arquivo
+				: new java.io.File(arquivo.getParentFile(), arquivo.getName() + ".txt");
 	}
 
 	public boolean isPreparacao() {
