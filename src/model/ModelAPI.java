@@ -166,6 +166,43 @@ public final class ModelAPI implements ObservadoIF {
 		return true;
 	}
 
+	/**
+	 * Lê uma partida salva por salvar(File) e a coloca no lugar da atual.
+	 * Arquivo inválido não altera a partida em curso; getErroArquivo() diz a
+	 * linha e o motivo.
+	 */
+	public boolean carregar(java.io.File arquivo) {
+		erroArquivo = "";
+		if (arquivo == null || !arquivo.isFile()) {
+			erroArquivo = "Arquivo não encontrado.";
+			return false;
+		}
+		ArquivoPartida.Recuperada recuperada;
+		try {
+			recuperada = ArquivoPartida.ler(java.nio.file.Files.readAllLines(arquivo.toPath(),
+					java.nio.charset.StandardCharsets.US_ASCII));
+		} catch (java.nio.charset.CharacterCodingException e) {
+			erroArquivo = "O arquivo não é um texto ASCII.";
+			return false;
+		} catch (java.io.IOException e) {
+			erroArquivo = "Não foi possível ler " + arquivo.getName() + ": " + e.getMessage();
+			return false;
+		} catch (RuntimeException e) {
+			erroArquivo = "Arquivo inválido. " + e.getMessage();
+			return false;
+		}
+		partida = recuperada.partida;
+		componentesKhan = recuperada.componentes;
+		erroConfiguracao = "";
+		jogadorPreparando = -1;
+		cartaSecretaVisivel = false;
+		janelaCartasAberta = false;
+		janelaCartelaAberta = false;
+		jogadorCartela = partida.getJogadores().indexOf(partida.getJogadorDaVez());
+		notificar();
+		return true;
+	}
+
 	public String getErroArquivo() { return erroArquivo; }
 
 	private static java.io.File comExtensaoTxt(java.io.File arquivo) {
