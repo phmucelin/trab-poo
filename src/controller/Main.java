@@ -8,7 +8,7 @@ public class Main {
 	private static class Abrir implements Runnable {
 		@Override
 		public void run() {
-			Controlador.getInstance().abrirJanelaInicial();
+			Controlador.getInstance().abrirJanelaAbertura();
 		}
 	}
 
