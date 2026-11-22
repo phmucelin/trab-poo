@@ -14,7 +14,7 @@ Pelo terminal, com um JDK 17 ou mais novo (os scripts respeitam `JAVA_HOME`):
 
 ```bash
 ./scripts/run_game.sh                 # compila e abre o jogo
-./scripts/run_tests.sh                # compila e roda os 212 testes
+./scripts/run_tests.sh                # compila e roda os 224 testes
 python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
 ```
 
@@ -33,8 +33,27 @@ python3 scripts/package_delivery.py   # gera o ZIP da entrega em output/entrega/
 5. Os botões Ver cartas e Ver cartela abrem janelas próprias com as imagens do
    jogo.
 
-Clique que a regra não permite é ignorado, e o jogo não usa caixas de
-diálogo: avisos e troca de turno aparecem nos próprios painéis.
+Clique que a regra não permite é ignorado, e os avisos e a troca de turno
+aparecem nos próprios painéis. Só há caixas de diálogo onde a 4ª iteração
+pede: a pergunta de nova partida no fim do jogo e o `JFileChooser` de
+salvar e carregar.
+
+### Fim da partida
+
+Quando o vencedor é apontado (aba Resultado), abre um diálogo perguntando se
+os jogadores querem uma nova partida. Sim reabre a janela de escolha dos
+herdeiros; Não encerra a aplicação. Fechar o tabuleiro encerra a aplicação a
+qualquer momento.
+
+### Salvar e carregar
+
+- **Salvar partida** (aba Turno) só fica habilitado antes de o jogador da vez
+  ativar uma coluna, e é reabilitado antes do jogador seguinte.
+- **Carregar partida** está na aba Turno e na janela inicial.
+- O arquivo é texto ASCII (`.txt`), com nome e pasta escolhidos no
+  `JFileChooser`. Acentos nos nomes são gravados como `\uXXXX`. Arquivo
+  inválido é recusado com uma mensagem e a partida atual não muda.
+- O formato e as validações estão em [docs/iteracao4.md](docs/iteracao4.md).
 
 ## Arquitetura
 
@@ -81,6 +100,7 @@ docs/             regras usadas, decisões e histórico de cada iteração
 | `Conselheiro`, `TipoBonus`, `TipoTesouro`, `TipoTributo` | Entregas e recompensas. |
 | `Pontuacao` | Influência por região, cartas secretas e desempates. |
 | `PecasDoJogo`, `ConfiguracaoPecas` | Cadastro das peças e validação dos totais. |
+| `SalvamentoPartida` | Grava e lê a partida em linhas de texto ASCII e valida o arquivo lido. |
 
 O mapa tem 34 paradas: em cada região, 9 simples (3 em volta de cada cidade)
 e 2 duplas de conselheiro, mais Karakorum no centro, ligado a 4 rotas. São 12
@@ -108,13 +128,15 @@ virou o quê:
 
 ## Testes
 
-São 212 testes JUnit 4. Os testes de regra trazem no Javadoc o objetivo, a
+São 224 testes JUnit 4. Os testes de regra trazem no Javadoc o objetivo, a
 entrada e a saída esperada. Alguns dos principais:
 
 - `TabuleiroTest` e `MapaOficialTest`: vizinhança, capacidade das paradas,
   maioria por região e as invariantes do mapa oficial.
 - `JochiTest` e `ObjetivosTest`: as regras de herdeiros e objetivos que
   dependem do FAQ do manual.
+- `SalvamentoPartidaTest`: ida e volta do arquivo de partida, continuação
+  idêntica a partir de um save e recusa de arquivos inválidos.
 - `PartidaCompletaInterfaceTest`: parte de uma partida de dois jogadores
   criada por código e joga a escolha das cartas secretas e os turnos, até o
   fim, pelos controles Swing (botões e cliques no mapa).
@@ -123,6 +145,7 @@ entrada e a saída esperada. Alguns dos principais:
 
 ## Documentação
 
+- [docs/iteracao4.md](docs/iteracao4.md): fim de partida, salvar e carregar.
 - [docs/iteracao3.md](docs/iteracao3.md): padrões, imagens, regras
   interpretadas e um roteiro para testar o jogo na mão.
 - [docs/regras-para-o-model.md](docs/regras-para-o-model.md): resumo das
@@ -132,4 +155,3 @@ entrada e a saída esperada. Alguns dos principais:
 - `docs/parte2-*`, `docs/parte3-*`, `docs/testes-parte*`: como cada parte da
   1ª iteração foi integrada e testada.
 
-Salvar e recuperar uma partida fica para a última iteração.

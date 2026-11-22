@@ -115,7 +115,7 @@ rodapé do mapa, continue ao alcance do mouse.
 
 ## Testes
 
-São 212 testes JUnit 4 (`./scripts/run_tests.sh` ou `TodosOsTestes` no
+São 212 testes JUnit 4 (na 3ª iteração; hoje são 224) (`./scripts/run_tests.sh` ou `TodosOsTestes` no
 Eclipse). Além dos testes de cada regra, há dois testes maiores:
 
 - `PartidaCompletaInterfaceTest` parte de uma partida de dois jogadores
@@ -148,4 +148,5 @@ Eclipse). Além dos testes de cada regra, há dois testes maiores:
 `python3 scripts/package_delivery.py` gera
 `output/entrega/HerdeirosDeKhan-iteracao3.zip` com o projeto Eclipse (fontes,
 testes, imagens, bibliotecas, scripts e documentação), sem `.git` e sem
-classes compiladas. Salvar e recuperar partida fica para a última iteração.
+classes compiladas. Salvar e recuperar partida foi feito na 4ª iteração (ver
+[iteracao4.md](iteracao4.md)).
