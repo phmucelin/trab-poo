@@ -28,6 +28,7 @@ public final class Controlador {
 
 	private static Controlador instancia = null;
 
+	private JanelaJogo janelaJogo;
 	private JanelaCartas janelaCartas;
 	private JanelaCartela janelaCartela;
 
@@ -66,13 +67,43 @@ public final class Controlador {
 		if (!model.novaPartida(nomes, herdeiros)) {
 			return false;
 		}
-		new JanelaJogo().setVisible(true);
+		abrirJanelaJogo();
+		return true;
+	}
+
+	/**
+	 * 4ª iteração: recupera a partida gravada no arquivo escolhido pela
+	 * JanelaInicial. Se o arquivo for inválido, devolve false e a partida em
+	 * memória fica como estava; ModelAPI.getErroArquivo() diz o motivo.
+	 */
+	public boolean carregarPartida(File arquivo) {
+		if (!model.carregar(arquivo)) {
+			return false;
+		}
+		abrirJanelaJogo();
 		return true;
 	}
 
 	/** 4ª iteração: só é aceito antes de o jogador da vez começar a jogar. */
 	public boolean salvarPartida(File arquivo) {
 		return model.salvar(arquivo);
+	}
+
+	private void abrirJanelaJogo() {
+		fecharJanelasDaPartida();
+		janelaJogo = new JanelaJogo();
+		janelaJogo.setVisible(true);
+	}
+
+	/** Fecha tabuleiro, cartas e cartela e solta seus observadores. */
+	private void fecharJanelasDaPartida() {
+		if (janelaCartas != null) janelaCartas.dispose();
+		if (janelaCartela != null) janelaCartela.dispose();
+		if (janelaJogo != null) janelaJogo.dispose();
+		janelaCartas = null;
+		janelaCartela = null;
+		janelaJogo = null;
+		model.removerObservadores();
 	}
 
 	public boolean escolherMelhoriaInicial(int indice) { return model.escolherMelhoriaInicial(indice); }

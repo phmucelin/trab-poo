@@ -73,6 +73,11 @@ public final class ModelAPI implements ObservadoIF {
 		}
 	}
 
+	/** Solta todos os observadores, ao fechar as janelas de uma partida terminada. */
+	public void removerObservadores() {
+		observadores.clear();
+	}
+
 	// ============================================================ partida
 
 	/** Nomes aceitos em novaPartida, na ordem do manual. */

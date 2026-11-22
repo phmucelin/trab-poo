@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,6 +28,7 @@ import model.ModelAPI;
  * Janela de configuração da partida (2ª iteração, Parte 3): número de
  * jogadores (2 a 5), nome e herdeiro de cada um, sem herdeiro repetido.
  * Recusas aparecem num JLabel da própria janela, sem JOptionPane.
+ * 4ª iteração: também carrega uma partida salva, escolhida num JFileChooser.
  */
 public class JanelaInicial extends JFrame {
 
@@ -53,6 +56,20 @@ public class JanelaInicial extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			iniciar();
+		}
+	}
+
+	/** Escolhe um arquivo .txt e pede ao Controlador para recuperar a partida. */
+	private class AcaoCarregar implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser seletor = SeletorArquivo.criar("Carregar partida salva");
+			if (seletor.showOpenDialog(JanelaInicial.this) != JFileChooser.APPROVE_OPTION) {
+				return;
+			}
+			File arquivo = seletor.getSelectedFile();
+			SeletorArquivo.lembrar(arquivo);
+			carregar(arquivo);
 		}
 	}
 
@@ -96,8 +113,13 @@ public class JanelaInicial extends JFrame {
 		lbAviso.setForeground(new Color(180, 0, 0));
 		JButton btIniciar = new JButton("Iniciar partida");
 		btIniciar.addActionListener(new AcaoIniciar());
+		JButton btCarregar = new JButton("Carregar partida salva...");
+		btCarregar.addActionListener(new AcaoCarregar());
+		JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+		botoes.add(btCarregar);
+		botoes.add(btIniciar);
 		base.add(lbAviso, BorderLayout.CENTER);
-		base.add(btIniciar, BorderLayout.EAST);
+		base.add(botoes, BorderLayout.SOUTH);
 		add(base, BorderLayout.SOUTH);
 
 		mostrarLinhas();
@@ -117,6 +139,17 @@ public class JanelaInicial extends JFrame {
 			paineisLinha[i].setVisible(i < n);
 		}
 		lbAviso.setText(" ");
+	}
+
+	/** Público para os testes de interface, que não abrem o JFileChooser. */
+	public boolean carregar(File arquivo) {
+		if (Controlador.getInstance().carregarPartida(arquivo)) {
+			dispose();
+			return true;
+		}
+		String erro = ModelAPI.getInstance().getErroArquivo();
+		lbAviso.setText("<html><div style='width:360px'>" + PainelPreparacao.escapar(erro) + "</div></html>");
+		return false;
 	}
 
 	private void iniciar() {
