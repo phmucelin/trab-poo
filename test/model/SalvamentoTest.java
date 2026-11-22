@@ -56,6 +56,105 @@ public class SalvamentoTest {
 		}
 	}
 
+	/**
+	 * Objetivo: regra 1 do enunciado, salvar só antes de o jogador começar a jogar.
+	 * Entrada: preparação, início do turno, coluna ativada, troca de peão de Altani, turno seguinte.
+	 * Saída esperada: falso na preparação; verdadeiro no início; falso após ativar coluna ou trocar o
+	 * peão; verdadeiro de novo no turno seguinte; e salvar() recusa quando não pode.
+	 */
+	@Test public void salvarSoAntesDeOJogadorComecar() {
+		assertTrue(m.novaPartidaCompleta(List.of("Ana", "Bia"), List.of("ALTANI", "TOLUI"), PecasDoJogo.cadastro(), new Random(3)));
+		assertFalse(m.podeSalvar());
+		while (m.isPreparacao()) assertTrue(m.escolherCartaSecreta(0));
+		assertTrue(m.podeSalvar());
+		assertTrue(m.escolherPeao(1));
+		assertFalse("trocar o peão já é começar a jogar", m.podeSalvar());
+		assertFalse(m.salvar(new File(pasta, "x.txt")));
+		assertFalse(m.getErroArquivo().isEmpty());
+		assertTrue(m.ativarColuna("BRANCA"));
+		assertFalse(m.podeSalvar());
+		assertTrue(m.moverKhan(m.getDestinosDoKhan().get(0)));
+		assertTrue(m.terminarTurno());
+		assertTrue("o próximo jogador ainda não começou", m.podeSalvar());
+		assertTrue(m.ativarColuna("BRANCA"));
+		assertFalse(m.podeSalvar());
+	}
+
+	/**
+	 * Objetivo: regras 2 e 3, texto ASCII puro com nome livre e extensão .txt.
+	 * Entrada: jogadores "João" e "Zoë"; arquivo escolhido sem extensão.
+	 * Saída esperada: grava "partida.txt" só com bytes ASCII; os nomes com acento voltam iguais.
+	 */
+	@Test public void arquivoEhAsciiPuroComExtensaoTxt() throws IOException {
+		assertTrue(m.novaPartidaCompleta(List.of("João", "Zoë"), List.of("JOCHI", "OGEDEI"), PecasDoJogo.cadastro(), new Random(5)));
+		while (m.isPreparacao()) {
+			if (m.isEscolhaMelhoriaInicialPendente()) assertTrue(m.escolherMelhoriaInicial(0));
+			else assertTrue(m.escolherCartaSecreta(0));
+		}
+		assertTrue(m.getErroArquivo(), m.salvar(new File(pasta, "partida")));
+		File arquivo = new File(pasta, "partida.txt");
+		assertTrue(arquivo.isFile());
+		for (byte b : Files.readAllBytes(arquivo.toPath())) assertTrue("byte fora do ASCII: " + b, b >= 0);
+		assertTrue(m.novaPartidaCompleta(List.of("X", "Y"), List.of("ALTANI", "TOLUI"), PecasDoJogo.cadastro(), new Random(1)));
+		assertTrue(m.getErroArquivo(), m.carregar(arquivo));
+		assertEquals("João", m.getNomeJogador(0));
+		assertEquals("Zoë", m.getNomeJogador(1));
+		assertEquals("JOCHI", m.getHerdeiroJogador(0));
+		assertEquals(1, m.getMelhoriasJogador(0, "BRANCA").size());
+	}
+
+	/**
+	 * Objetivo: arquivo inválido é recusado sem estragar a partida em curso.
+	 * Entrada: arquivo truncado (sem FIM), arquivo com acento cru, número inválido e arquivo inexistente.
+	 * Saída esperada: carregar() devolve falso com mensagem; a partida em curso continua igual.
+	 */
+	@Test public void arquivoInvalidoNaoAlteraAPartida() throws IOException {
+		iniciar(new Random(7), 7);
+		File bom = new File(pasta, "bom.txt");
+		assertTrue(m.salvar(bom));
+		List<String> linhas = Files.readAllLines(bom.toPath(), StandardCharsets.US_ASCII);
+		List<String> semFim = new ArrayList<>(linhas.subList(0, linhas.size() - 1));
+		List<String> numeroRuim = new ArrayList<>();
+		for (String linha : linhas) numeroRuim.add(linha.startsWith("PARTIDA;") ? linha.replace("rodada=", "rodada=x") : linha);
+
+		File truncado = new File(pasta, "truncado.txt");
+		Files.write(truncado.toPath(), semFim, StandardCharsets.US_ASCII);
+		File acento = new File(pasta, "acento.txt");
+		Files.write(acento.toPath(), List.of("HERDEIROS_DE_KHAN;versao=1", "JOGADOR;nome=João", "FIM"), StandardCharsets.UTF_8);
+		File ruim = new File(pasta, "ruim.txt");
+		Files.write(ruim.toPath(), numeroRuim, StandardCharsets.US_ASCII);
+
+		for (File arquivo : List.of(truncado, acento, ruim, new File(pasta, "nao-existe.txt"))) {
+			assertFalse(arquivo.getName(), m.carregar(arquivo));
+			assertFalse(arquivo.getName(), m.getErroArquivo().isEmpty());
+			File depois = new File(pasta, "depois.txt");
+			assertTrue(m.salvar(depois));
+			assertEquals(arquivo.getName() + " alterou a partida", linhas, Files.readAllLines(depois.toPath(), StandardCharsets.US_ASCII));
+		}
+		assertTrue(m.carregar(ruim) == false && m.getErroArquivo().contains("rodada"));
+	}
+
+	/**
+	 * Objetivo: o professor pode editar o arquivo para montar um cenário de teste.
+	 * Entrada: arquivo salvo com as moedas do jogador 0 trocadas para 9 e uma espada a mais.
+	 * Saída esperada: a partida carregada mostra 9 moedas e a espada a mais.
+	 */
+	@Test public void arquivoEditadoAMaoEhRespeitado() throws IOException {
+		iniciar(new Random(11), 11);
+		File arquivo = new File(pasta, "cenario.txt");
+		assertTrue(m.salvar(arquivo));
+		int espadas = m.getTributosJogador(0, "ESPADA");
+		List<String> editado = new ArrayList<>();
+		for (String linha : Files.readAllLines(arquivo.toPath(), StandardCharsets.US_ASCII)) {
+			if (linha.startsWith("JOGADOR;indice=0;")) linha = linha.replaceAll(";MOEDA=\\d+", ";MOEDA=9").replaceAll(";ESPADA=\\d+", ";ESPADA=" + (espadas + 1));
+			editado.add(linha);
+		}
+		Files.write(arquivo.toPath(), editado, StandardCharsets.US_ASCII);
+		assertTrue(m.getErroArquivo(), m.carregar(arquivo));
+		assertEquals(9, m.getTributosJogador(0, "MOEDA"));
+		assertEquals(espadas + 1, m.getTributosJogador(0, "ESPADA"));
+	}
+
 	// ------------------------------------------------------------ partida sorteada
 
 	private void iniciar(Random sorteio, int semente) {
