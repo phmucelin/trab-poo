@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import view.JanelaInicial;
 import view.JanelaJogo;
 import view.JanelaCartas;
@@ -138,7 +141,47 @@ public final class Controlador {
 	}
 
 	public boolean terminarTurno() {
-		return model.terminarTurno();
+		boolean terminou = model.terminarTurno();
+		// 4ª iteração: logo depois de o vencedor aparecer na aba Resultado,
+		// pergunta se os jogadores querem outra partida. Só há pergunta quando
+		// o tabuleiro foi aberto por este Controlador (não nos testes de painel).
+		if (terminou && model.isPartidaEncerrada() && janelaJogo != null && janelaJogo.isDisplayable()) {
+			SwingUtilities.invokeLater(new PerguntarNovaPartida());
+		}
+		return terminou;
+	}
+
+	/** Executado depois que os observadores mostraram o resultado. */
+	private class PerguntarNovaPartida implements Runnable {
+		@Override
+		public void run() {
+			int resposta = JOptionPane.showConfirmDialog(janelaJogo, textoDoResultado() + "\n\nDesejam iniciar uma nova partida?",
+					"Fim da partida", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			fimDaPartida(resposta == JOptionPane.YES_OPTION);
+		}
+	}
+
+	/**
+	 * Resposta ao diálogo de fim de partida: sim reabre a escolha dos
+	 * personagens; não encerra a aplicação.
+	 */
+	public void fimDaPartida(boolean novaPartida) {
+		if (!novaPartida) {
+			System.exit(0);
+		}
+		fecharJanelasDaPartida();
+		abrirJanelaInicial();
+	}
+
+	private String textoDoResultado() {
+		List<Integer> vencedores = model.getVencedores();
+		StringBuilder texto = new StringBuilder(vencedores.size() > 1 ? "Vitória compartilhada: " : "Vencedor: ");
+		for (int i = 0; i < vencedores.size(); i++) {
+			int j = vencedores.get(i);
+			if (i > 0) texto.append(", ");
+			texto.append(model.getNomeJogador(j)).append(" (").append(model.getVotosJogador(j)).append(" votos)");
+		}
+		return texto.append('.').toString();
 	}
 
 	/** Ações da aba lateral; legalidade e custos permanecem no Model. */
