@@ -9,7 +9,7 @@ sources = [".project", ".classpath", ".settings", "src", "test", "imagens", "lib
 missing = [name for name in sources if not (root / name).exists()]
 if missing:
     raise SystemExit("Arquivos ausentes: " + ", ".join(missing))
-output = root / "output" / "entrega" / "HerdeirosDeKhan-iteracao3.zip"
+output = root / "output" / "entrega" / "HerdeirosDeKhan-iteracao4.zip"
 output.parent.mkdir(parents=True, exist_ok=True)
 with ZipFile(output, "w", ZIP_DEFLATED) as archive:
     for name in sources:
